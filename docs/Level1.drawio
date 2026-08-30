@@ -1,0 +1,154 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="chJ8QyHYYPteK_3ssSuo">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="K1PDW9q6RYEfYVqWgzx2-6" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="propdatasrc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="K1PDW9q6RYEfYVqWgzx2-7" connectable="0" parent="K1PDW9q6RYEfYVqWgzx2-6" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" value="Property CSV Import" vertex="1">
+          <mxGeometry relative="1" x="-0.0942" y="5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="agent" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#000;" value="Agent&#xa;(Staff Member)" vertex="1">
+          <mxGeometry height="80" width="100" x="80" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="propdatasrc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#000;" value="Property Data&#xa;Source&#xa;(CSV file)" vertex="1">
+          <mxGeometry height="80" width="100" x="40" y="630" as="geometry" />
+        </mxCell>
+        <mxCell id="openclaw" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#000;" value="OpenClaw&#xa;(AI extraction)" vertex="1">
+          <mxGeometry height="80" width="100" x="330" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="p1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="1.0&#xa;Manage Lead&#xa;Intake" vertex="1">
+          <mxGeometry height="80" width="120" x="70" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="K1PDW9q6RYEfYVqWgzx2-1" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;libavoidRouting=1;" target="p3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="p2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="2.0&#xa;Extract Lead&#xa;Details" vertex="1">
+          <mxGeometry height="80" width="120" x="310" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="p3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="3.0&#xa;Check Duplicates&#xa;&amp; Flag&#xa;Missing Fields" vertex="1">
+          <mxGeometry height="80" width="120" x="550" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="p4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="4.0&#xa;Match&#xa;Properties" vertex="1">
+          <mxGeometry height="80" width="120" x="780" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="p5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="5.0&#xa;Generate&#xa;Reply Draft" vertex="1">
+          <mxGeometry height="80" width="120" x="1050" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="p6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5ff;strokeColor=#6c5ce7;" value="6.0&#xa;Review &amp; Send&#xa;Reply" vertex="1">
+          <mxGeometry height="80" width="120" x="1250" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="D1&#xa;Leads&#xa;(SQLite)" vertex="1">
+          <mxGeometry height="100" width="120" x="370" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="D2&#xa;Properties&#xa;(CSV → SQLite)" vertex="1">
+          <mxGeometry height="100" width="120" x="700" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;" value="D3&#xa;Reply Drafts" vertex="1">
+          <mxGeometry height="100" width="120" x="1050" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;" target="p1" value="Raw enquiry text">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="propdatasrc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;" target="d2" value="Property CSV import">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="p1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;" target="p2" value="Enquiry text">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;" target="openclaw" value="Enquiry text">
+          <mxGeometry relative="1" x="-0.2" y="30" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="340" y="300" />
+              <mxPoint x="340" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="openclaw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;" target="p2" value="Extracted fields">
+          <mxGeometry relative="1" x="-0.0667" y="50" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="390" y="310" />
+              <mxPoint x="390" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;entryX=0;entryY=0;entryDx=0;entryDy=0;" target="d1" value="Structured lead record">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="p3" value="Lead record">
+          <mxGeometry relative="1" x="0.2" y="20" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="p3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=1;exitDx=0;exitDy=0;" target="d1" value="Duplicate flag / missing-field flags">
+          <mxGeometry relative="1" x="-0.4118" y="20" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="460" y="430" />
+            </Array>
+            <mxPoint x="550" y="430" as="sourcePoint" />
+            <mxPoint x="460" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;" target="p4" value="Lead criteria&amp;nbsp;">
+          <mxGeometry relative="1" x="-0.7084" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;entryX=0;entryY=1;entryDx=0;entryDy=0;" target="p4" value="Property listings">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="p4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;" target="p5" value="Matched properties&amp;nbsp;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="p5" value="Lead summary">
+          <mxGeometry relative="1" x="-0.1733" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="430" y="470" />
+              <mxPoint x="1080" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="p5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;" target="d3" value="Draft reply">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="d3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;" target="p6" value="Draft reply">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1310" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="p6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;entryX=0.996;entryY=0.105;entryDx=0;entryDy=0;entryPerimeter=0;" target="agent" value="Final reply for review">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1310" y="68.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="p6" value="Approved/edited reply">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1280" y="100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="K1PDW9q6RYEfYVqWgzx2-3" edge="1" parent="1" source="p3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=10;libavoidRouting=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="p4" value="Lead criteria&amp;nbsp;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="740" y="410" as="sourcePoint" />
+            <mxPoint x="1370" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
