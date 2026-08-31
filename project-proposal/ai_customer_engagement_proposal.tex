@@ -7,6 +7,10 @@
 \setlist[itemize]{itemsep=1pt,topsep=2pt}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{4pt}
+\newcommand{\verticalflowfour}[4]{\begin{center}\small\fbox{\strut #1}\\$\downarrow$\\\fbox{\strut #2}\\$\downarrow$\\\fbox{\strut #3}\\$\downarrow$\\\fbox{\strut #4}\end{center}}
+\newcommand{\branchdiagram}{\begin{center}\small\fbox{\strut New lead}\ $\rightarrow$\ \fbox{\strut Rules + OpenClaw}\ $\rightarrow$\ \begin{tabular}{c}\fbox{\strut Reply draft}\\[2pt]\fbox{\strut Human review}\end{tabular}\end{center}}
+\newcommand{\metricdiagram}{\begin{center}\small New enquiry \quad$\bullet\longrightarrow\bullet\longrightarrow\bullet$\quad Checked reply\\[-2pt]Target: under 5 min\end{center}}
+\newcommand{\phasediagram}{\begin{center}\small\fbox{\strut Build MVP}\ $\rightarrow$\ \fbox{\strut Test and improve}\ $\rightarrow$\ \fbox{\strut Add later}\end{center}}
 
 \title{OpenClaw-Based Real Estate Lead Desk for Small Property Teams}
 \author{Aman Kapoor \quad Vidushi Jain}
@@ -16,7 +20,7 @@
 \maketitle
 
 \section{Higher-order goal}
-The goal of this project is to help a small real-estate team reply to customers faster. The system will not replace an agent. It will help the agent understand a new enquiry, find possible properties, and prepare a reply. This gives customers a quicker and more useful first response.
+This project helps small real-estate teams respond to new customer enquiries faster while keeping the human agent in control.
 
 \section{Time-to-value}
 \begin{itemize}
@@ -26,34 +30,12 @@ The goal of this project is to help a small real-estate team reply to customers 
 \end{itemize}
 
 \section{Problem Statement}
-Small real-estate teams get customer messages from calls, WhatsApp, forms, and social media. The agent has to find out the customer's budget, location, property type, and moving date. This information is often spread across many messages. It takes time to read everything and search a property spreadsheet.
-
-Customers may have to wait for a reply or may receive properties that do not match what they want. This can make them lose interest. The project solves this first-contact problem in a simple way.
-\begin{itemize}
-    \item \textbf{Hours lost:} agents copy details from chats into notes and search lists again and again.
-    \item \textbf{Cold leads:} a customer may contact another broker if the reply is late.
-    \item \textbf{No clear next step:} agents may not know whether to call the customer, ask another question, or send a shortlist.
-\end{itemize}
+Small real-estate teams receive messages from calls, WhatsApp, forms, and social media. Important details such as budget, location, and property type are spread across these messages, so agents must search manually before replying.
 
 \section{Proposed Solution}
 \subsection{Overview}
-We will build a small web app called a \textbf{real-estate lead desk}. A staff member can paste a customer enquiry into the app. OpenClaw will help read the message and collect the important details. The app will search a small property list and create an editable reply. The staff member will always check the result before sending it.
-\begin{itemize}
-    \item \textbf{Lead inbox:} add a new customer message through a form or by pasting text.
-    \item \textbf{OpenClaw assistant:} find the budget, location, property type, and other needs from the message.
-    \item \textbf{Property matching:} show up to three suitable properties from a CSV file.
-    \item \textbf{Reply draft:} prepare a short WhatsApp or email-style reply.
-    \item \textbf{Human review:} the agent edits, copies, and sends the final reply.
-\end{itemize}
-
-\subsection{Core workflow}
-\begin{enumerate}
-    \item The agent adds a customer enquiry to the lead inbox.
-    \item OpenClaw finds the main details and marks anything missing.
-    \item The app searches the property list using location, budget, property type, and availability.
-    \item The app shows a short lead summary, matching properties, and a reply draft.
-    \item The human agent checks the result and sends the reply using WhatsApp or email.
-\end{enumerate}
+We will build a small web app called a \textbf{real-estate lead desk}. A staff member pastes a customer enquiry into the app, and the final reply is always checked by a human agent.
+\verticalflowfour{Lead inbox}{OpenClaw reads needs}{Property matches}{Human reply}
 
 \subsection{Operational constraints for an educational, tier-2/3 setting}
 \begin{itemize}
@@ -63,7 +45,8 @@ We will build a small web app called a \textbf{real-estate lead desk}. A staff m
 \end{itemize}
 
 \section{Solution Approach}
-This is a small software project, not a full CRM system. We will focus on one clear job: helping an agent reply to a new lead. This makes the work realistic for two students and useful for a small agency.
+This is a focused student project, not a full CRM system. It supports one job: helping an agent prepare a reply to a new lead.
+\branchdiagram
 
 \subsection{Duplicate/quality assistance}
 The app will check whether a new enquiry looks similar to an older one. It can compare the contact detail, location, budget, and property type. It will also show missing details clearly. The system will only suggest possible duplicates; it will never remove or merge leads by itself. OpenClaw will not give legal, financial, or mortgage advice. Such questions will be shown to the human agent.
@@ -79,7 +62,8 @@ We will use GitHub and GitHub Actions for version control and basic tests. The a
 
 \section{Evaluation Criterion}
 \subsection{Primary evaluation metric}
-\textbf{Time-to-ready-reply (TRR)} is the time from adding a customer enquiry to getting a checked reply draft. Our target is a median TRR of less than five minutes in our test cases. We will measure this using timestamps in the app.
+\textbf{Time-to-ready-reply (TRR)} measures the time from adding a customer enquiry to getting a checked reply draft. Our target is a median TRR of less than five minutes.
+\metricdiagram
 
 \subsection{Secondary evaluation metrics}
 \begin{itemize}
@@ -94,10 +78,9 @@ We will use GitHub and GitHub Actions for version control and basic tests. The a
 We will test the app using 30--50 fictional enquiries from buyers, tenants, and sellers. Two to five people will review some of the summaries, matches, and reply drafts. We will compare the app with the manual method of reading the message, searching a spreadsheet, and writing a reply.
 
 \section{Scalability}
-The first version is small, but it can grow later. The lead inbox, matching rules, OpenClaw flow, and property data will be kept separate. Later, the CSV file can be replaced with a database or a CRM connection. For now, local SQLite is enough.
+The first version uses separate lead, matching, workflow, and data modules. Later, its CSV file can move to a database or CRM connection; for now, local SQLite is enough.
 
 \section{Engine availability heuristic}
-We will use tools that are easy for students to access:
 \begin{itemize}
     \item OpenClaw for the assistant flow, with a simple template backup if it is unavailable.
     \item A lightweight web framework and backend API.
@@ -123,6 +106,7 @@ We will use tools that are easy for students to access:
     \item Copy-to-clipboard for WhatsApp or email.
     \item A short report, test results, and final demonstration.
 \end{itemize}
+\phasediagram
 
 \section{Risks and mitigations}
 \begin{itemize}
@@ -134,6 +118,6 @@ We will use tools that are easy for students to access:
 \end{itemize}
 
 \section{Summary}
-This project builds a simple lead desk for small real-estate teams. It helps an agent understand a new enquiry, find possible properties, and prepare a reply. The agent remains in control at every step. Because we use CSV files, SQLite, free development tools, and fictional data, two students can build and test the first version without paying for services.
+Aman Kapoor and Vidushi Jain will build a free, practical lead desk that helps agents prepare faster replies while keeping people in control.
 
 \end{document}
