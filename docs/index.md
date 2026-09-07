@@ -58,5 +58,5 @@ validation checklist. The listing data is historical test data: prices,
 availability, ownership and legal details always require human verification.
 
 Read the [implementation status](implementation-status.md), [Aman Kapoor work
-journal](journals/aman-kapoor/Aman-Kapoor-Work-Journal.md) and repository
+journal](journals/AmanKapoor_1024240140/Aman-Kapoor-Work-Journal.md) and repository
 README for setup and validation commands.
