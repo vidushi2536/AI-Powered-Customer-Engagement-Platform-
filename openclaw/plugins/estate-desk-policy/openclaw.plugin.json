@@ -1,0 +1,13 @@
+{
+  "id": "estate-desk-policy",
+  "name": "Estate Desk Policy",
+  "activation": {
+    "onCapabilities": [
+      "hook"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false
+  }
+}

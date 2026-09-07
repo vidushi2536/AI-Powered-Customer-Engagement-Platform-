@@ -1,5 +1,5 @@
-site_name: "UCS503 : Software Engineering : Project Template"
-site_url: https://tiet-ucs503.github.io/ucs503p-202627odd-template
+site_name: "AI-Powered Customer Engagement Platform"
+site_url: https://vidushi2536.github.io/AI-Powered-Customer-Engagement-Platform-
 
 plugins:
 - search
@@ -46,14 +46,14 @@ theme:
   logo: assets/tiet-logo.svg
   favicon: assets/favicon.png
 
-repo_url: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-repo_name: ucs503p-202627odd-template
-copyright: "Copyright &copy; 2025 <a href='https://bvraghav.com/'>Raghav B. Venkataramaiyer</a> &lt;<code style='color:inherit; background:transparent'>bv.raghav</code>&gt;"
+repo_url: https://github.com/vidushi2536/AI-Powered-Customer-Engagement-Platform-
+repo_name: vidushi2536/AI-Powered-Customer-Engagement-Platform-
+copyright: "Copyright &copy; 2026 Aman Kapoor and Vidushi Jain"
 extra:
   social:
   - icon: fontawesome/brands/github
-    link: https://github.com/tiet-ucs503/ucs503p-202627odd-template
-    name: Git Repo for UCS503P Project Template
+    link: https://github.com/vidushi2536/AI-Powered-Customer-Engagement-Platform-
+    name: AI-Powered Customer Engagement Platform repository
 
 extra_css:
   - assets/stylesheets/extra.css

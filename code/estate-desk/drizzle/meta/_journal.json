@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788675831254,
+      "tag": "0000_early_sugar_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788690000000,
+      "tag": "0001_whatsapp_sync",
+      "breakpoints": true
+    }
+  ]
+}

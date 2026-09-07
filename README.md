@@ -1,45 +1,80 @@
-# UCS503P Project Template
+# AI-Powered Customer Engagement Platform
 
-This is a project template for UCS503P Project (2026-27
-ODD). 
+Estate Desk is a WhatsApp-first real-estate lead qualification prototype for
+Gurugram. A tightly scoped OpenClaw agent gathers budget, bedroom, location and
+timeline requirements, recommends only catalogued properties, records viewing
+interest and sends the conversation state to an advisor dashboard. The website
+is an operations console; buyers converse through WhatsApp, not an on-site chat.
 
-There are 3 reports in LaTeX format, namely *a*)
-Project Proposal, *b*) Project Report Prototype Stage,
-and *c*) Project Report Final -- each in their
-respective folders.
+Authors: **Aman Kapoor and Vidushi Jain**
 
-Journals are stacked under the folder `journals`, one
-folder for each team member.  A sample entry has been
-made for example.
+Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)**
 
-The source code is contained within the folder `code`.
+## Implemented prototype
 
-The documentation is under folder `docs`.
+- ChatGPT-authenticated, per-user dashboard with phone association.
+- Simulated CRM with one configurable, allowlisted WhatsApp contact.
+- 3,909-row Gurgaon/Gurugram Kaggle CSV plus a deterministic 120-listing app
+  catalog and full-dataset download.
+- Lead summary, requirements, evidence, property matches, follow-up state,
+  advisor notes and viewing proposals.
+- Signed, deduplicated WhatsApp event ingestion backed by Cloudflare D1.
+- Isolated OpenClaw workspace, peer binding, no-tool agent and independent
+  input/output policy plugin.
+- STOP/START consent lifecycle, prompt-injection rejection, message limits and
+  server-side validation.
 
-All other aspects of code organisation are left to the
-discretion of the user(s).
+The owner-authenticated prototype is deployed at
+[estate-desk-lawbstah.kapooraman201.chatgpt.site](https://estate-desk-lawbstah.kapooraman201.chatgpt.site).
+The linked WhatsApp gateway remains a local/private integration.
 
+## Repository layout
 
-## Docs
-
-As of now, the `docs` is just an organised collection
-of markdown (`md`) files.  But the build procedure is
-using [`mkdocs`](https://google.com/search?q=mkdocs)
-backend.  As a result, any commit into the `master`
-branch of github repository would result in CI/CD based
-build and deployment of the documentation including the
-journals.
-
-For a local DEV-version of the docs for viewing and
-testing, install the local env and issue the following
-command:
-
-``` shell
-make docs
+```text
+code/estate-desk/       Vinext/React application, APIs, D1 schema and dataset
+openclaw/               Sanitized workspace, event hook and policy plugin
+docs/                   MkDocs project documentation and diagrams
+journals/               Individual contribution journals
+project-proposal/       LaTeX proposal
+project-report-*/       Prototype and final report workspaces
 ```
 
-### Local `env` for `docs`
+## Run the web application
 
-``` shell
+Requirements: Node.js 22.13 or newer.
 
+```powershell
+cd code/estate-desk
+Copy-Item .env.example .dev.vars
+npm ci
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0000_early_sugar_man.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0001_whatsapp_sync.sql
+npm run dev
 ```
+
+Put the single permitted E.164 number in `ALLOWED_WHATSAPP_PHONE`; never commit
+the real value. Without Twilio credentials, phone verification is visibly in
+demo mode and uses code `123456`. See
+[`code/estate-desk/README.md`](code/estate-desk/README.md) and
+[`openclaw/README.md`](openclaw/README.md) for full setup.
+
+## Validate
+
+```powershell
+cd code/estate-desk
+npx tsc --noEmit
+npx tsx --test tests/domain.test.ts
+npm run build
+```
+
+The API smoke test additionally requires the local development server and D1
+migrations: `node tests/api-smoke.mjs`.
+
+## Documentation
+
+The MkDocs documentation is published by the existing GitHub Actions workflow
+on pushes to `master` or `main`. For a local preview, install the documented
+Python dependencies and run `make docs`.
+
+All listings are historical sample data, not live offers. A human advisor must
+verify price, ownership, availability, legal facts and consent before acting.

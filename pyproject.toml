@@ -4,16 +4,17 @@ requires = ["hatchling","hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "tiet-ucs503.github.io/ucs503p-202627odd-template"
+name = "ai-powered-customer-engagement-platform"
 version = "0.0.1"
 authors = [
-  { name="Raghav B. Venkataramaiyer", email="bv.raghav@thapar.edu" },
+  { name="Aman Kapoor" },
+  { name="Vidushi Jain" },
 ]
 # maintainers = [
 #   { name="Raghav B. Venkataramaiyer",
 #     email="bvraghav@gmail.com" },
 # ]
-description = "UCS503 : Software Engineering : Project Sample"
+description = "WhatsApp-first AI real-estate lead qualification and advisor dashboard"
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -30,8 +31,8 @@ classifiers = [
 dependencies = ["click"]
 
 [project.urls]
-Homepage = "https://github.com/tiet-ucs503/ucs503p-202627odd-template"
-Issues = "https://github.com/tiet-unc512/ucs503p-202627odd-template/issues"
+Homepage = "https://github.com/vidushi2536/AI-Powered-Customer-Engagement-Platform-"
+Issues = "https://github.com/vidushi2536/AI-Powered-Customer-Engagement-Platform-/issues"
 
 # Adapted from https://stackoverflow.com/a/50156706
 [tool.pytest.ini_options]
