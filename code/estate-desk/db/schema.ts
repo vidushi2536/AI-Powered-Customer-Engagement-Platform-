@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 export const workspaces = sqliteTable('workspaces', {
   id: text('id').primaryKey(),
   state: text('state').notNull(),
@@ -26,4 +26,43 @@ export const whatsappEvents = sqliteTable('whatsapp_events', {
   content: text('content').notNull(),
   occurredAt: text('occurred_at').notNull(),
   createdAt: text('created_at').notNull(),
+});
+export const campaigns = sqliteTable('campaigns', {
+  id: text('id').primaryKey(),
+  workspaceId: text('workspace_id').notNull(),
+  name: text('name').notNull(),
+  status: text('status').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+export const campaignContacts = sqliteTable('campaign_contacts', {
+  id: text('id').primaryKey(),
+  campaignId: text('campaign_id').notNull(),
+  phone: text('phone').notNull(),
+  status: text('status').notNull(),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull(),
+});
+export const properties = sqliteTable('properties', {
+  id: text('id').primaryKey(),
+  campaignId: text('campaign_id').notNull(),
+  address: text('address').notNull(),
+  location: text('location').notNull(),
+  price: real('price').notNull(),
+  bedrooms: integer('bedrooms').notNull(),
+  sizeSqft: real('size_sqft').notNull(),
+  propertyType: text('property_type'),
+  isHot: integer('is_hot').notNull().default(0),
+  demandScore: real('demand_score').notNull().default(0),
+  rawSource: text('raw_source'),
+  createdAt: text('created_at').notNull(),
+});
+export const handoffs = sqliteTable('handoffs', {
+  id: text('id').primaryKey(),
+  campaignId: text('campaign_id').notNull(),
+  phone: text('phone').notNull(),
+  reason: text('reason').notNull(),
+  status: text('status').notNull(),
+  createdAt: text('created_at').notNull(),
+  acknowledgedAt: text('acknowledged_at'),
 });

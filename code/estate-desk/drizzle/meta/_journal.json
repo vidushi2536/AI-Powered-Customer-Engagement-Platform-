@@ -15,6 +15,13 @@
       "when": 1788690000000,
       "tag": "0001_whatsapp_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789195721235,
+      "tag": "0002_spooky_starfox",
+      "breakpoints": true
     }
   ]
 }

@@ -46,6 +46,11 @@ export default defineConfig(async () => {
 
   return {
     css: { postcss: { plugins: [tailwindcss()] } },
+    environments: {
+      client: { optimizeDeps: { exclude: ['drizzle-orm'] } },
+      rsc: { optimizeDeps: { exclude: ['drizzle-orm'] } },
+      ssr: { optimizeDeps: { exclude: ['drizzle-orm'] } },
+    },
     server: {
       host: '0.0.0.0',
       allowedHosts: ['localhost', 'host.docker.internal'],
