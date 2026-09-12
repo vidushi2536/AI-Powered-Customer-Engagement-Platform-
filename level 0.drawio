@@ -1,0 +1,99 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="H_9t3whEGYsyWM-5q9QP">
+    <mxGraphModel dx="981" dy="535" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-62" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;curved=1;" target="8WWyw9PCP-7RY04u2OXU-59">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530.05" y="660.05" />
+              <mxPoint x="640.05" y="660.05" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-63" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;curved=1;" target="8WWyw9PCP-7RY04u2OXU-59">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530.05" y="800.05" />
+              <mxPoint x="640.05" y="800.05" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-41" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=17;fillColor=#b0e3e6;strokeColor=#0e8088;" value="&lt;font&gt;Real Estate Desk System&lt;/font&gt;" vertex="1">
+          <mxGeometry height="170" width="160" x="370" y="648.75" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-42" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d8764;strokeColor=#3A5431;fontColor=#ffffff;" value="Agent (Staff Member)" vertex="1">
+          <mxGeometry height="60" width="120" x="30" y="618.75" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-43" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6d8764;strokeColor=#3A5431;fontColor=#ffffff;" value="Property Data Source(CSV) file" vertex="1">
+          <mxGeometry height="60" width="120" x="30" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-44" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="&lt;font style=&quot;font-size: 20px;&quot;&gt;LEVEL 0&lt;/font&gt;" vertex="1">
+          <mxGeometry height="30" width="170" x="360" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-49" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-42" style="curved=1;endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" target="8WWyw9PCP-7RY04u2OXU-41" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="628.75" />
+            </Array>
+            <mxPoint x="180" y="648.75" as="sourcePoint" />
+            <mxPoint x="360" y="691.25" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-50" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-43" style="curved=1;endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;endFill=0;startArrow=classic;startFill=1;" target="8WWyw9PCP-7RY04u2OXU-41" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="850" />
+              <mxPoint x="280" y="850" />
+              <mxPoint x="330" y="820" />
+            </Array>
+            <mxPoint x="300" y="740" as="sourcePoint" />
+            <mxPoint x="350" y="690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-51" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-41" style="curved=1;endArrow=none;html=1;rounded=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;startArrow=classic;startFill=1;endFill=0;" target="8WWyw9PCP-7RY04u2OXU-42" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="260" y="760" />
+              <mxPoint x="180" y="700" />
+            </Array>
+            <mxPoint x="360" y="740" as="sourcePoint" />
+            <mxPoint x="410" y="690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-52" edge="1" parent="1" source="8WWyw9PCP-7RY04u2OXU-43" style="curved=1;endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="8WWyw9PCP-7RY04u2OXU-41" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <Array as="points">
+              <mxPoint x="210" y="760" />
+              <mxPoint x="290" y="750" />
+            </Array>
+            <mxPoint x="360" y="740" as="sourcePoint" />
+            <mxPoint x="410" y="690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-53" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;rotation=5;" value="customer enquiry text" vertex="1">
+          <mxGeometry height="30" width="130" x="202" y="614.75" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-55" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;rotation=15;" value="Property CSV File" vertex="1">
+          <mxGeometry height="30" width="100" x="205" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-56" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;rotation=-15;" value="Lead summary, Property matches, Reply drafts" vertex="1">
+          <mxGeometry height="30" width="170" x="205" y="850" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-58" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;rotation=-15;" value="Edited/approved reply (send conformation)" vertex="1">
+          <mxGeometry height="30" width="130" x="190" y="770" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#6a00ff;fontColor=#ffffff;strokeColor=#3700CC;" value="Open Claw (AI extraction service)" vertex="1">
+          <mxGeometry height="60" width="120" x="640" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-64" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="enquiry text" vertex="1">
+          <mxGeometry height="30" width="90" x="540" y="633.75" as="geometry" />
+        </mxCell>
+        <mxCell id="8WWyw9PCP-7RY04u2OXU-66" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="extracted details" vertex="1">
+          <mxGeometry height="30" width="100" x="540" y="800" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,105 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="ttVd14XDO5wpHpNcqehN">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1400" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5RcNObSTngyBo8BlMof_-2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;direction=south;" value="" vertex="1">
+          <mxGeometry height="810" width="660" x="210" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=16;fontStyle=1;align=center;" value="Process 2.0 — Extract Lead Details (Detail)" vertex="1">
+          <mxGeometry height="40" width="600" x="240" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="agent" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Agent (Staff Member)" vertex="1">
+          <mxGeometry height="60" width="140" x="460" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="2.1 Parse Raw Enquiry Text" vertex="1">
+          <mxGeometry height="60" width="140" x="460" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="2.2 Call OpenClaw Extraction" vertex="1">
+          <mxGeometry height="60" width="140" x="460" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="openclaw" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="OpenClaw (AI Extraction Service)" vertex="1">
+          <mxGeometry height="60" width="140" x="920" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="2.3 Apply Fallback&#xa;Rule-Based Template" vertex="1">
+          <mxGeometry height="60" width="140" x="250" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="2.4 Validate &amp;&#xa;Mark Missing Fields" vertex="1">
+          <mxGeometry height="60" width="140" x="640" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="p2_5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="2.5 Write Structured Lead to Store" vertex="1">
+          <mxGeometry height="60" width="140" x="460" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="D1 Leads (SQLite)" vertex="1">
+          <mxGeometry height="70" width="110" x="475" y="820" as="geometry" />
+        </mxCell>
+        <mxCell id="e_agent_to_p2_1" edge="1" parent="1" source="agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" target="p2_1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_agent_to_p2_1_label" connectable="0" parent="e_agent_to_p2_1" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=middle;fontSize=10;" value="Raw enquiry text" vertex="1">
+          <mxGeometry x="490" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_1_to_p2_2" edge="1" parent="1" source="p2_1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" target="p2_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_1_to_p2_2_label" connectable="0" parent="e_p2_1_to_p2_2" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=middle;fontSize=10;" value="Cleaned text" vertex="1">
+          <mxGeometry x="500" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_2_to_openclaw" edge="1" parent="1" source="p2_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;entryX=0;entryY=0.25;entryDx=0;entryDy=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" target="openclaw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_2_to_openclaw_label" connectable="0" parent="e_p2_2_to_openclaw" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;" value="Extraction request" vertex="1">
+          <mxGeometry x="660" y="280" as="geometry">
+            <mxPoint x="40" y="29" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_openclaw_to_p2_2" edge="1" parent="1" source="openclaw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=0;exitX=0;exitY=0;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" target="p2_2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="720" y="410" as="sourcePoint" />
+            <mxPoint x="600" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_openclaw_to_p2_2_label" connectable="0" parent="e_openclaw_to_p2_2" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=9;" value="Extracted fields&#xa;(or error/timeout)" vertex="1">
+          <mxGeometry x="720" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_2_to_p2_3_failure" edge="1" parent="1" source="p2_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#d62728;" target="p2_3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="460" y="370" as="sourcePoint" />
+            <mxPoint x="390" y="490" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_p2_2_to_p2_3_label" connectable="0" parent="e_p2_2_to_p2_3_failure" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#d62728;" value="Failure signal (conditional)" vertex="1">
+          <mxGeometry x="330" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_2_to_p2_4_success" edge="1" parent="1" source="p2_2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#2ca02c;" target="p2_4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="530" y="400" as="sourcePoint" />
+            <mxPoint x="530" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e_p2_2_to_p2_4_label" connectable="0" parent="e_p2_2_to_p2_4_success" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#2ca02c;" value="OpenClaw-extracted fields&#xa;(normal path)" vertex="1">
+          <mxGeometry x="700" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_3_to_p2_4" edge="1" parent="1" source="p2_3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" target="p2_4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_3_to_p2_4_label" connectable="0" parent="e_p2_3_to_p2_4" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;" value="Template-extracted fields" vertex="1">
+          <mxGeometry x="460" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_4_to_p2_5" edge="1" parent="1" source="p2_4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" target="p2_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_4_to_p2_5_label" connectable="0" parent="e_p2_4_to_p2_5" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=middle;fontSize=10;" value="Validated lead record&#xa;+ missing-field flags" vertex="1">
+          <mxGeometry x="480" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_5_to_d1" edge="1" parent="1" source="p2_5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e_p2_5_to_d1_label" connectable="0" parent="e_p2_5_to_d1" style="edgeLabel;resizable=0;html=1;align=center;verticalAlign=middle;fontSize=10;" value="Final structured lead" vertex="1">
+          <mxGeometry x="530" y="790" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
