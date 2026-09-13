@@ -1,92 +1,88 @@
 # Aman Kapoor — Estate Desk work journal
 
-**Date:** 7 September 2026
+**Student:** Aman Kapoor
+
+**Roll number:** 1024240140
+
+**Updated:** 13 September 2026
 
 **Project:** AI-Powered Customer Engagement Platform
 
 ## My contribution
 
-My contribution in this iteration covered the product scope, dashboard,
-property-data pipeline, WhatsApp/OpenClaw integration, safety controls, testing
-and deployment of the Estate Desk prototype.
-
-I refined the broad customer-engagement proposal into a concrete real-estate
-workflow. Buyers communicate on WhatsApp; the website is an advisor dashboard
-that shows conversation summaries, requirements, property matches, lead status,
-evidence and recommended follow-up. The AI is intentionally restricted to
-Gurugram property discovery, catalog details, requirement collection and viewing
-interest. It does not answer unrelated requests or independently confirm a
-meeting.
+I changed the earlier prototype into a complete WhatsApp-first real-estate
+manager application. Buyers continue to speak on WhatsApp. The website now
+starts with phone login, collects CRM and property data, and then opens a live
+dashboard. The final goal of the agent is to understand the buyer and help the
+manager arrange a physical visit to one or more suitable properties.
 
 ## Work completed
 
-### Application and experience
+### Login and onboarding
 
-- Built the multi-page Vinext/React dashboard for overview, leads, properties,
-  connections, agent setup and phone association.
-- Added ChatGPT-based workspace identity and a simulated CRM with one test
-  contact.
-- Added property filters, lead notes, transcript export, CSV upload and a human
-  advisor viewing-proposal flow.
-- Kept conversation text read-only on the website so the channel of record stays
-  WhatsApp.
+- Built a new landing page with phone-number sign-up and login.
+- Added OTP verification with optional Twilio Verify and a labelled demo mode.
+- Made CRM and property-file onboarding compulsory before dashboard access.
+- Added CSV templates, validation and clear consent confirmation.
 
-### Property dataset
+### Manager dashboards
 
-- Imported and normalized the Gurgaon real-estate Kaggle dataset.
-- Preserved the complete 3,909-row CSV for testing and exposed a downloadable
-  copy from the app.
-- Generated a deterministic 120-listing catalog for fast matching and agent
-  context while retaining source-row metadata and historical-data warnings.
+- Rebuilt the Overview page around useful lead and message statistics.
+- Added form and CSV options for adding new clients and properties.
+- Built a Meetings dashboard that lists meeting-ready buyers, contact details,
+  budget, bedroom choice, location, timeline and the exact properties to show.
+- Built a Trends dashboard showing the locations, property types and listings
+  mentioned most often in buyer conversations.
+- Added downloadable CSV reports containing buyer details, agent analysis,
+  meeting readiness, property matches and permitted chat data.
 
-### WhatsApp and OpenClaw
+### Real-time WhatsApp data
 
-- Created an isolated `estate-desk` OpenClaw workspace with a dedicated identity,
-  real-estate rules and fixed catalog context.
-- Configured a peer-specific WhatsApp route so the Estate Desk personality does
-  not replace the Telegram agent or other WhatsApp personalities.
-- Added a local message hook that mirrors successful inbound and outbound text
-  events to a signed dashboard endpoint.
-- Added an independent policy plugin that blocks non-WhatsApp destinations,
-  non-allowlisted contacts, suspicious prompts and out-of-scope output.
-- Removed tools from the real-estate agent and used a fail-closed single-number
-  allowlist.
+- Added signed inbound and outbound WhatsApp event ingestion.
+- Added deduplication so a retried webhook does not create repeated messages.
+- Added a server-sent event stream so every dashboard refreshes while a buyer
+  conversation is happening, without manually reloading the page.
+- Added a CRM watcher that updates OpenClaw contact routes and property context
+  when the manager changes the workspace data.
 
-### Persistence and safeguards
+### Agent behavior and safety
 
-- Added Cloudflare D1 tables for workspaces, phone ownership, verification
-  challenges and deduplicated WhatsApp events.
-- Added optimistic revision checks to prevent silent overwrites when dashboard
-  and WhatsApp updates arrive close together.
-- Implemented STOP/START consent handling, input length limits, origin checks,
-  event authentication, account/channel checks and server-side qualification.
-- Ensured the public repository contains no live tokens, link state or personal
-  WhatsApp number. Private values are supplied through ignored environment files.
+- Kept the Estate Desk personality separate from the Telegram personality.
+- Restricted it to property requirements, catalog recommendations and physical
+  visit interest.
+- Added separate input and output policy checks for suspicious or unrelated
+  prompts.
+- Kept unknown contacts blocked, made `inbound-only` the default, and applied
+  STOP/START consent handling.
+- Kept price, availability, legal facts and meeting confirmation under human
+  control.
 
-### Testing and delivery
+### Data, storage and testing
 
-- Added ten domain tests covering matching, qualification, budget conversion,
-  prompt rejection, consent and WhatsApp event handling.
-- Added API smoke tests for authentication, phone association, signed events,
-  deduplication, invalid actions, page routes and dataset download.
-- Completed TypeScript checking and a production build.
-- Deployed an owner-authenticated application build and documented the remaining
-  production webhook/tunnel requirement.
+- Imported the historical Gurgaon real-estate dataset with 3,909 rows and made
+  it downloadable for testing.
+- Kept a normalized 120-property sample catalog for fast matching.
+- Extended the Cloudflare D1 schema for phone workspaces, multiple contacts,
+  conversation events and live state revisions.
+- Added eleven domain tests and API smoke coverage for authentication,
+  onboarding, uploads, WhatsApp events, consent, matching and page routes.
+- Removed the unused old login, single-contact phone API and old dashboard
+  component so the repository contains only the current application path.
 
-## Problems encountered and resolutions
+## Problems and solutions
 
-The OpenClaw policy plugin initially could not be loaded safely from a writable
-Windows Docker bind mount. I moved the plugin into a custom container image with
-non-world-writable permissions. The large dataset also affected local file
-watching, so generated/archive files were excluded and the runtime catalog was
-kept intentionally small. Finally, the hosted dashboard could not directly
-receive events from a local WhatsApp gateway; I documented the current local
-sync and the authenticated webhook/tunnel change required for production.
+The biggest problem was joining a local WhatsApp gateway with a browser
+dashboard. I used a signed webhook for message events and a local watcher for
+CRM configuration. Another problem was stale dashboard data. I added a live
+event stream and revision checks so close updates do not silently overwrite one
+another. I also separated the OpenClaw agent from the main Telegram identity so
+both can run at the same time.
 
 ## Result
 
-The iteration produced a working, testable vertical slice: a permitted WhatsApp
-message reaches a narrowly scoped property agent, the resulting event is stored,
-and an advisor can see what the buyer wants and whether to qualify, nurture,
-stop or schedule a viewing. The remaining work is production CRM integration,
-role-based access, a production-grade webhook and live inventory verification.
+The current version is a working vertical slice. An authorized buyer sends a
+WhatsApp message, the real-estate agent gathers needs and suggests catalog
+properties, and the manager sees the result live. The manager can identify who
+is ready for a physical meeting, what to show them and what action to take next.
+The remaining production work is a hosted per-owner WhatsApp connector, a real
+CRM integration, role-based team access and live inventory verification.

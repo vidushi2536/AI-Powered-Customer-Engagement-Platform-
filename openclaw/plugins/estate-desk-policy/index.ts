@@ -1,7 +1,6 @@
 import { definePluginEntry } from 'openclaw/plugin-sdk/plugin-entry';
 
 const agentId = 'estate-desk';
-const allowedPhone = normalize(process.env.ALLOWED_WHATSAPP_PHONE);
 const forbidden =
   /(system\s*prompt|api.?key|password|secret|token|ignore.{0,40}instruction|jailbreak|developer\s*mode|\b(shell|bash|powershell|sudo|execute|exec|malware|hack|seashell|politics|election|bitcoin|recipe|poem)\b|<\/?script|https?:\/\/|\`\`\`)/i;
 const propertyLanguage =
@@ -22,7 +21,7 @@ function normalize(value: unknown) {
 export default definePluginEntry({
   id: 'estate-desk-policy',
   name: 'Estate Desk Policy',
-  description: 'Fail-closed input and output policy for one real-estate WhatsApp peer.',
+  description: 'Fail-closed input and output policy for CRM-approved real-estate WhatsApp peers.',
   register(api) {
     api.on('before_agent_run', (event, ctx) => {
       if (!isEstateDesk(ctx as Record<string, unknown>)) return;
@@ -49,9 +48,12 @@ export default definePluginEntry({
         (event as Record<string, unknown>).to ||
           (event as Record<string, unknown>).recipient,
       );
+      const sessionMatch = String((ctx as Record<string, unknown>).sessionKey || '')
+        .match(/whatsapp:direct:(\+?\d{10,15})(?:$|:)/i);
+      const sessionPhone = normalize(sessionMatch?.[1]);
       if (channel && channel !== 'whatsapp')
         return { cancel: true, cancelReason: 'estate_desk_whatsapp_only' };
-      if (!allowedPhone || !target || target !== allowedPhone)
+      if ((!target && !sessionPhone) || (target && sessionPhone && target !== sessionPhone))
         return { cancel: true, cancelReason: 'estate_desk_contact_not_allowed' };
       const content = String(event.content || '');
       if (

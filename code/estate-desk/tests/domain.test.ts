@@ -7,14 +7,26 @@ import {
   matches,
   normalisePhone,
   qualify,
+  workspaceInsights,
   type Workspace,
 } from '../lib/domain.ts';
 
 const fresh = (): Workspace => ({
-  phone: null,
+  phone: '+917755971789',
+  ownerPhone: '+919876543210',
+  onboardingComplete: true,
   phoneMode: 'demo',
   crm: true,
   agentEnabled: true,
+  contacts: [
+    {
+      phone: '+917755971789',
+      name: 'Test buyer',
+      consent: 'inbound-only',
+      addedAt: '2026-09-06T09:00:00.000Z',
+    },
+  ],
+  leads: [],
   requirements: {},
   messages: [],
   properties: [
@@ -124,10 +136,29 @@ test('inventory mismatch is not an opt-out', () => {
 test('converts crores and normalises the allowlisted number', () => {
   const state = qualify(fresh(), '2 BHK, budget 1.2 crore');
   assert.equal(state.requirements.budget, 120);
-  assert.equal(normalisePhone('+91 99999 99999'), '+919999999999');
+  assert.equal(normalisePhone('+91 77559 71789'), '+917755971789');
 });
 
 test('rejects empty or excessive input', () => {
   assert.throws(() => qualify(fresh(), ''));
   assert.throws(() => qualify(fresh(), 'a'.repeat(1201)));
+});
+
+test('builds grounded lead briefs and property demand from WhatsApp data', () => {
+  const state = ingestWhatsApp(
+    fresh(),
+    {
+      id: 'wa-insight-1',
+      direction: 'received',
+      text: 'I want to visit GGN-0004. Need 2 BHK under 80 lakh in sector 107.',
+      at: '2026-09-06T11:00:00.000Z',
+    },
+    '+917755971789',
+  );
+  const insights = workspaceInsights(state);
+  assert.equal(insights.leads[0].recommendations[0].property.id, 'GGN-0004');
+  assert.equal(insights.leads[0].recommendations[0].specificallyMentioned, true);
+  assert.equal(insights.trends.directPropertyInquiries, 1);
+  assert.equal(insights.trends.properties[0].property.id, 'GGN-0004');
+  assert.equal(insights.trends.sectors[0].label, 'Sector 107, Gurugram');
 });

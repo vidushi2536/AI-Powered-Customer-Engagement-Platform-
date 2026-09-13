@@ -1,6 +1,5 @@
 import { createHash } from 'node:crypto';
 
-const allowedPhone = phone(process.env.ALLOWED_WHATSAPP_PHONE);
 const allowedAccount = 'shellsworth';
 
 function phone(value) {
@@ -19,7 +18,7 @@ export default async function estateDeskSync(event) {
     event.action === 'received'
       ? phone(context.metadata?.senderE164 || context.from)
       : phone(context.to);
-  if (!allowedPhone || contact !== allowedPhone) return;
+  if (!/^\+\d{10,15}$/.test(contact)) return;
   const text = String(context.content || '').trim();
   if (!text || text.length > 1200) return;
   const timestamp = context.timestamp || event.timestamp || new Date();

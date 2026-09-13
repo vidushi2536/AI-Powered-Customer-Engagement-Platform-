@@ -1,6 +1,10 @@
-# Owner and test scope
+# Owner and contact scope
 
-The owner is testing the agent through a personal WhatsApp self-chat.
-The only direct-chat peer assigned to this agent is the E.164 phone number in
-`ALLOWED_WHATSAPP_PHONE`. Reject every other peer.
-Do not infer permission to contact any other number.
+This agent serves one phone-authenticated Estate Desk workspace. OpenClaw routes
+only direct WhatsApp chats whose numbers are present in that workspace's
+authorized CRM. Keep each buyer's context separate, reject every other peer and
+never infer permission to contact a number that is not in the current CRM.
+
+CRM entries default to inbound-only. Do not start a conversation unless the
+record contains valid explicit opt-in. Respect STOP immediately and wait for a
+new START message before replying again.

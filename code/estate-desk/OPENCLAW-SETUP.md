@@ -1,64 +1,59 @@
 # OpenClaw + WhatsApp integration
 
-The tested integration uses a linked WhatsApp account named `shellsworth`.
-WhatsApp link state and credentials are not included in this repository. The
-integration does not replace the Shellsworth personality globally.
-A more-specific direct-peer binding routes only the number configured in
-`ALLOWED_WHATSAPP_PHONE` to the
-`estate-desk` agent; the existing account-level Shellsworth binding remains the
-fallback for other allowlisted contacts.
+Estate Desk uses the linked personal WhatsApp account named `shellsworth` as a
+separate channel personality. It does not replace the Telegram agent. Buyers
+talk on WhatsApp; managers sign in, manage data and review live results on the
+website.
 
-## Message path
+## Message and data path
 
-1. The conversation begins and continues in WhatsApp.
-2. OpenClaw routes the one test direct chat to the isolated Estate Desk agent.
-3. The agent has no tools and receives a fixed historical Gurgaon catalog in its
-   bootstrap context.
-4. A local internal hook mirrors successful inbound and outbound text to
-   `http://host.docker.internal:3000/api/whatsapp/events`.
-5. The server accepts only the shared secret, account `shellsworth`, WhatsApp
-   channel, and configured allowlisted phone. Event IDs are deduplicated.
-6. The dashboard is read-only for conversation text and refreshes every 10 seconds.
-
-The sanitized hook, policy plugin and agent instructions are versioned under
-this repository's `openclaw/` directory. In a Docker deployment, copy the policy
-plugin into the image with non-world-writable permissions rather than mounting
-it from a writable host directory.
+1. A manager signs in with the phone number linked to the workspace.
+2. The manager uploads an authorized CRM CSV and current property CSV.
+3. The CRM watcher reads the workspace context, updates OpenClaw's WhatsApp
+   allowlist and creates a direct Estate Desk route for every approved contact.
+4. An approved contact messages the linked WhatsApp account.
+5. OpenClaw routes the chat to the real-estate-only personality.
+6. The event hook signs and mirrors inbound and outbound text to
+   `/api/whatsapp/events`.
+7. D1 stores deduplicated events and recalculates qualification, matches,
+   trends, next action and meeting readiness.
+8. `/api/workspace/stream` pushes the new state to every open dashboard in near
+   real time.
 
 ## Start locally
 
-Apply both D1 migrations, run the web server, then recreate the OpenClaw
-container so it reads the added environment values and workspace mount:
+Apply all three D1 migrations as shown in `README.md`, then run:
 
 ```powershell
-cd code\estate-desk
-npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0000_early_sugar_man.sql
-npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0001_whatsapp_sync.sql
+cd C:\Users\bubblesk231\lawbstah\estate-desk
 npm run dev
-
-# Change to the directory containing your private OpenClaw docker-compose.yml.
-docker compose up -d --force-recreate openclaw-gateway
-docker compose exec openclaw-gateway openclaw hooks info estate-desk-sync
-docker compose exec openclaw-gateway openclaw plugins inspect estate-desk-policy --runtime --json
-docker compose exec openclaw-gateway openclaw status --deep
 ```
 
-Open `http://localhost:3000/login`, associate the value configured in
-`ALLOWED_WHATSAPP_PHONE`, and use the
-displayed demo code when Twilio Verify is not configured. Then send a message in
-the WhatsApp self-chat. The transcript should appear at `/leads`.
+In another PowerShell window, keep the CRM/OpenClaw bridge running. Replace the
+phone with the owner workspace that controls the linked account:
+
+```powershell
+cd C:\Users\bubblesk231\lawbstah
+node scripts\sync-openclaw-crm.mjs +917755971789 --watch
+```
+
+Open `http://localhost:3000/`, sign in and complete onboarding. The sample
+Gurgaon catalog remains available until the manager replaces or extends it.
 
 ## Safety boundary
 
-The route binding, tool denial, isolated workspace, input policy hook, output
-rewrite/cancellation hook, webhook allowlist, and server-side qualification are
-independent layers. They materially limit prompt-injection consequences but are
-not an honest guarantee that a language model can never produce a confused
-answer. Keep a human advisor responsible for prices, availability, legal facts,
-contact consent, and meeting confirmation.
+Importing a number does not permit cold messaging. Contacts default to
+`inbound-only`, so they must message first. Use `opted-in` only when valid
+consent exists. STOP immediately prevents further replies; START is required to
+resume.
 
-The current webhook URL is local because the OpenClaw gateway is local. A hosted
-private dashboard cannot receive unauthenticated Internet webhooks through its
-owner-only access wall. For production, put the local receiver behind an
-authenticated private tunnel or move event ingestion to a dedicated public
-webhook service while keeping the dashboard data authenticated.
+The channel allowlist, per-contact routing, isolated workspace, input/output
+policy, signed webhook and server-side validation are separate safeguards. The
+agent is limited to real-estate discovery, requirements, catalog matches and
+physical-visit interest. A human manager confirms prices, availability, legal
+facts, consent and all meeting arrangements.
+
+This integration is local because the personal WhatsApp session lives inside
+the local Docker gateway. A hosted release needs an authenticated connection
+service and webhook for each owner; a public dashboard cannot directly control
+the user's private Docker container.

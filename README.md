@@ -1,53 +1,49 @@
-# AI-Powered Customer Engagement Platform
+# Estate Desk — AI-Powered Customer Engagement Platform
 
-Estate Desk is a WhatsApp-first real-estate lead qualification prototype for
-Gurugram. A tightly scoped OpenClaw agent gathers budget, bedroom, location and
-timeline requirements, recommends only catalogued properties, records viewing
-interest and sends the conversation state to an advisor dashboard. The website
-is an operations console; buyers converse through WhatsApp, not an on-site chat.
+Estate Desk is a WhatsApp-first real-estate lead and meeting assistant for
+Gurugram. Buyers talk to a narrowly scoped OpenClaw agent through WhatsApp. The
+website gives the property manager live summaries, buyer requirements, matched
+properties, meeting readiness and market trends. There is no buyer chat on the
+website.
 
 Authors: **Aman Kapoor and Vidushi Jain**
 
 Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)**
 
-## Implemented prototype
+## Current application
 
-- ChatGPT-authenticated, per-user dashboard with phone association.
-- Simulated CRM with one configurable, allowlisted WhatsApp contact.
-- 3,909-row Gurgaon/Gurugram Kaggle CSV plus a deterministic 120-listing app
-  catalog and full-dataset download.
-- Lead summary, requirements, evidence, property matches, follow-up state,
-  advisor notes and viewing proposals.
-- Signed, deduplicated WhatsApp event ingestion backed by Cloudflare D1.
-- Isolated OpenClaw workspace, peer binding, no-tool agent and independent
-  input/output policy plugin.
-- STOP/START consent lifecycle, prompt-injection rejection, message limits and
-  server-side validation.
-- A second, multi-campaign pipeline (`/api/campaigns/**`, `/campaigns`
-  dashboard section): per-campaign contact allowlists, an immutable raw
-  message ledger, deterministic requirement extraction and property matching,
-  and a human-handoff queue with a manager-only resume control. See
-  `docs/implementation-status.md` for what's implemented versus still a gap
-  in this track.
-
-The owner-authenticated prototype is deployed at
-[estate-desk-lawbstah.kapooraman201.chatgpt.site](https://estate-desk-lawbstah.kapooraman201.chatgpt.site).
-The linked WhatsApp gateway remains a local/private integration.
+- Phone-number sign-up and login, with a clearly marked demo OTP (`123456`) when
+  Twilio Verify is not configured.
+- Guided onboarding for a CRM contact CSV and a property-listing CSV.
+- Multi-contact workspaces with consent states: `inbound-only`, `opted-in` and
+  `opted-out`.
+- A 3,909-row historical Gurgaon dataset, a normalized 120-property sample
+  catalog, and downloadable CSV templates.
+- Live Overview, Meetings and Trends dashboards updated through server-sent
+  events while WhatsApp conversations continue.
+- Meeting-ready buyer cards containing contact details, requirements, matched
+  properties and the latest useful conversation facts.
+- Downloadable CSV exports combining agent analysis and permitted chat data.
+- Signed and deduplicated WhatsApp event ingestion backed by Cloudflare D1.
+- A separate OpenClaw real-estate personality, peer routing and an independent
+  input/output policy that rejects unrelated or suspicious requests.
+- STOP/START handling, contact authorization checks, message limits and human
+  confirmation of prices, availability and physical meetings.
 
 ## Repository layout
 
 ```text
-code/estate-desk/       Vinext/React application, APIs, D1 schema and dataset
-openclaw/               Sanitized workspace, event hook and policy plugin
-docs/                   MkDocs project documentation and diagrams
+code/estate-desk/       Vinext/React app, APIs, D1 schema, tests and sample data
+openclaw/               Secret-free workspace, sync hook, policy and CRM bridge
+docs/                   MkDocs documentation and project diagrams
 journals/               Individual contribution journals
-project-proposal/       LaTeX proposal
+project-proposal/       LaTeX project proposal
 project-report-*/       Prototype and final report workspaces
 ```
 
-## Run the web application
+## Run locally
 
-Requirements: Node.js 22.13 or newer.
+Node.js 22.13 or newer is required.
 
 ```powershell
 cd code/estate-desk
@@ -55,38 +51,28 @@ Copy-Item .env.example .dev.vars
 npm ci
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0000_early_sugar_man.sql
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0001_whatsapp_sync.sql
-npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0002_spooky_starfox.sql
-npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0003_campaign_conversation_pipeline.sql
-npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0004_campaign_message_delivery_status.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0002_long_cannonball.sql
 npm run dev
 ```
 
-Put the single permitted E.164 number in `ALLOWED_WHATSAPP_PHONE`; never commit
-the real value. Without Twilio credentials, phone verification is visibly in
-demo mode and uses code `123456`. Set `CAMPAIGN_SYNC_SECRET` to enable the
-multi-campaign allowlist/messages/handoff endpoints under `/api/campaigns/**`
-(the dashboard's own `/campaigns` section works without it, using your signed-in
-session instead). See
-[`code/estate-desk/README.md`](code/estate-desk/README.md) and
-[`openclaw/README.md`](openclaw/README.md) for full setup.
+Open [http://localhost:3000/](http://localhost:3000/). Sign up with the phone
+number that owns the linked WhatsApp workspace, then upload the CRM and listing
+files. See [`code/estate-desk/OPENCLAW-SETUP.md`](code/estate-desk/OPENCLAW-SETUP.md)
+for the local OpenClaw bridge.
 
 ## Validate
 
 ```powershell
 cd code/estate-desk
 npx tsc --noEmit
-npx tsx --test tests/domain.test.ts tests/messaging.test.ts tests/campaign-matching.test.ts
+npx tsx --test tests/domain.test.ts
 npm run build
+node tests/api-smoke.mjs
 ```
 
-The API smoke test additionally requires the local development server and D1
-migrations: `node tests/api-smoke.mjs`.
+The smoke test needs the local development server, all three migrations and the
+test sync secret described in the application README.
 
-## Documentation
-
-The MkDocs documentation is published by the existing GitHub Actions workflow
-on pushes to `master` or `main`. For a local preview, install the documented
-Python dependencies and run `make docs`.
-
-All listings are historical sample data, not live offers. A human advisor must
-verify price, ownership, availability, legal facts and consent before acting.
+All included listings are historical sample data, not live offers. A human
+manager must verify price, ownership, availability, legal facts, consent and
+meeting details before acting.

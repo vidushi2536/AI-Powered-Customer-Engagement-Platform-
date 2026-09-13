@@ -1,4 +1,4 @@
-import EstateApp from './estate-app';
+import Landing from './landing';
 export default function Page() {
-  return <EstateApp />;
+  return <Landing />;
 }

@@ -1,123 +1,153 @@
-// lib/store.ts
-//
-// RECONSTRUCTED FILE. Imported by every legacy-workspace API route
-// (workspace, phone, whatsapp/events) but never committed to the
-// repository. The shape below was inferred from those call sites.
-//
-// Persistence and identity for the single-workspace WhatsApp demo. Talks to
-// Cloudflare D1 and the ChatGPT-auth headers; keeps `lib/domain.ts` free of
-// I/O so the domain rules stay unit-testable.
-
 import { env } from 'cloudflare:workers';
-import { getChatGPTUser } from '@/app/chatgpt-auth';
-import propertyCatalog from '@/data/properties.json';
-import { normalisePhone, type Property, type Workspace } from './domain';
-
-type RuntimeEnv = {
-  ALLOWED_WHATSAPP_PHONE?: string;
-  WHATSAPP_SYNC_SECRET?: string;
-  TWILIO_ACCOUNT_SID?: string;
-  TWILIO_AUTH_TOKEN?: string;
-  TWILIO_VERIFY_SERVICE_SID?: string;
-  [key: string]: string | undefined;
-};
-
-/** Raw access to the environment bindings/vars this app relies on. */
-export function runtime(): RuntimeEnv {
-  return env as unknown as RuntimeEnv;
-}
-
-/** The Cloudflare D1 binding. Throws (fail closed) if it isn't wired up. */
-export function database(): D1Database {
-  if (!env.DB) throw new Error('Cloudflare D1 binding `DB` is unavailable.');
+import { headers } from 'next/headers';
+import properties from '@/data/properties.json';
+import {
+  DATASET_VERSION,
+  type Contact,
+  type Lead,
+  type Workspace,
+} from './domain';
+export function database() {
+  if (!env.DB) throw new Error('Database unavailable');
   return env.DB;
 }
-
-/**
- * The single WhatsApp number this demo is permitted to talk to. Fails
- * closed: if it isn't configured, nothing may be treated as allowlisted.
- */
-export function allowedPhone(): string {
-  const raw = runtime().ALLOWED_WHATSAPP_PHONE;
-  if (!raw) throw new Error('ALLOWED_WHATSAPP_PHONE is not configured.');
-  return normalisePhone(raw);
+export async function identity() {
+  const requestHeaders = await headers();
+  const cookie = requestHeaders.get('cookie') || '';
+  const token = cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith('estate_session='))
+    ?.slice('estate_session='.length);
+  if (!token) throw new Error('UNAUTHORIZED');
+  const tokenHash = await hashToken(decodeURIComponent(token));
+  const session = await database()
+    .prepare(
+      'SELECT workspace_id FROM app_sessions WHERE token_hash=? AND expires>?',
+    )
+    .bind(tokenHash, Date.now())
+    .first<{ workspace_id: string }>();
+  if (!session) throw new Error('UNAUTHORIZED');
+  return session.workspace_id;
 }
-
-/** Resolves the authenticated ChatGPT user to a stable workspace id. */
-export async function identity(): Promise<string> {
-  const user = await getChatGPTUser();
-  if (!user) throw new Error('UNAUTHORIZED');
-  return `user:${user.userId}`;
-}
-
-function initialWorkspace(): Workspace {
+export function initial(): Workspace {
   return {
+    ownerPhone: null,
+    onboardingComplete: false,
+    contacts: [],
+    leads: [],
     phone: null,
     phoneMode: 'demo',
     crm: true,
     agentEnabled: true,
     requirements: {},
     messages: [],
-    properties: propertyCatalog as Property[],
+    properties,
+    datasetVersion: DATASET_VERSION,
     status: 'New',
     interestedId: null,
     meeting: null,
     blocked: 0,
-    note: '',
     updatedAt: new Date().toISOString(),
+    note: '',
+    whatsapp: {
+      accountId: 'shellsworth',
+      senderPhone: null,
+      lastEventAt: null,
+      connected: false,
+    },
   };
 }
-
-type WorkspaceRow = { state: string; revision: number };
-
-/** Reads (creating on first access) a workspace's state and revision. */
-export async function read(
-  id: string,
-): Promise<{ state: Workspace; revision: number }> {
+function hydrate(value: Workspace): Workspace {
+  const base = initial();
+  const uploads = Array.isArray(value.properties)
+    ? value.properties.filter((property) => property.source === 'Your CSV')
+    : [];
+  const legacyPhone = value.phone || null;
+  const contacts: Contact[] = Array.isArray(value.contacts)
+    ? value.contacts
+    : legacyPhone
+      ? [
+          {
+            phone: legacyPhone,
+            name: 'Imported contact',
+            consent:
+              value.status === 'Opted out' ? 'opted-out' : 'inbound-only',
+            addedAt: value.updatedAt,
+          },
+        ]
+      : [];
+  const leads: Lead[] = Array.isArray(value.leads)
+    ? value.leads
+    : legacyPhone
+      ? [
+          {
+            phone: legacyPhone,
+            name: contacts[0]?.name || 'Imported contact',
+            status: value.status,
+            requirements: value.requirements || {},
+            messages: Array.isArray(value.messages) ? value.messages : [],
+            interestedId: value.interestedId,
+            meeting: value.meeting,
+            blocked: value.blocked || 0,
+            updatedAt: value.updatedAt,
+          },
+        ]
+      : [];
+  return {
+    ...base,
+    ...value,
+    ownerPhone: value.ownerPhone || legacyPhone,
+    onboardingComplete: value.onboardingComplete === true,
+    contacts,
+    leads,
+    requirements: value.requirements || {},
+    messages: Array.isArray(value.messages) ? value.messages : [],
+    properties:
+      value.datasetVersion === DATASET_VERSION
+        ? value.properties
+        : [...properties, ...uploads],
+    datasetVersion: DATASET_VERSION,
+    whatsapp: { ...base.whatsapp!, ...value.whatsapp },
+  };
+}
+export async function read(id: string) {
   const db = database();
-  const row = await db
-    .prepare('SELECT state, revision FROM workspaces WHERE id=?')
-    .bind(id)
-    .first<WorkspaceRow>();
-  if (row) return { state: JSON.parse(row.state) as Workspace, revision: row.revision };
-
-  const now = new Date().toISOString();
-  const state = initialWorkspace();
   await db
     .prepare(
-      'INSERT INTO workspaces (id, state, revision, updated_at) VALUES (?,?,0,?) ON CONFLICT(id) DO NOTHING',
+      'INSERT OR IGNORE INTO workspaces (id,state,revision,updated_at) VALUES (?,?,0,?)',
     )
-    .bind(id, JSON.stringify(state), now)
+    .bind(id, JSON.stringify(initial()), new Date().toISOString())
     .run();
-
-  const created = await db
-    .prepare('SELECT state, revision FROM workspaces WHERE id=?')
+  const row = await db
+    .prepare('SELECT state,revision FROM workspaces WHERE id=?')
     .bind(id)
-    .first<WorkspaceRow>();
-  if (!created) throw new Error('Could not initialise workspace.');
-  return { state: JSON.parse(created.state) as Workspace, revision: created.revision };
+    .first<{ state: string; revision: number }>();
+  if (!row) throw new Error('Workspace unavailable');
+  return {
+    state: hydrate(JSON.parse(row.state) as Workspace),
+    revision: row.revision,
+  };
+}
+export async function save(id: string, state: Workspace, revision: number) {
+  state.updatedAt = new Date().toISOString();
+  const result = await database()
+    .prepare(
+      'UPDATE workspaces SET state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?',
+    )
+    .bind(JSON.stringify(state), state.updatedAt, id, revision)
+    .run();
+  if (result.meta.changes !== 1)
+    throw new Error('Another change arrived. Refresh and try again.');
+}
+export function runtime() {
+  return env as unknown as Record<string, string>;
 }
 
-/**
- * Persists a workspace with optimistic concurrency: the write only applies
- * if `revision` still matches the stored row, otherwise it throws so the
- * caller can reload rather than silently clobbering a concurrent update.
- */
-export async function save(
-  id: string,
-  state: Workspace,
-  revision: number,
-): Promise<void> {
-  const db = database();
-  const now = new Date().toISOString();
-  const next: Workspace = { ...state, updatedAt: now };
-  const result = await db
-    .prepare(
-      'UPDATE workspaces SET state=?, revision=revision+1, updated_at=? WHERE id=? AND revision=?',
-    )
-    .bind(JSON.stringify(next), now, id, revision)
-    .run();
-  if (!result.meta || result.meta.changes === 0) {
-    throw new Error('Workspace was updated elsewhere. Reload and try again.');
-  }
+export async function hashToken(token: string) {
+  const bytes = new TextEncoder().encode(token);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 }

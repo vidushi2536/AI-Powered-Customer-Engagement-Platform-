@@ -1,70 +1,40 @@
-# Prototype implementation status
-
-## Delivered in the current iteration
-
-The original proposal described a general AI customer-engagement concept. The
-prototype narrows it to a testable real-estate workflow and uses WhatsApp as the
-only buyer conversation channel.
+# Current implementation status
 
 | Area | Implemented state |
 | --- | --- |
-| User access | ChatGPT-authenticated dashboard with a separate phone association step |
-| CRM | One configurable allowlisted contact for safe friend/family testing |
-| Property data | Historical Gurgaon Kaggle CSV (3,909 rows), deterministic 120-row catalog and advisor CSV upload |
-| Agent | Isolated `estate-desk` OpenClaw personality with no tools and catalog-only facts |
-| Messaging | Signed inbound/outbound event sync from WhatsApp; no website chat |
-| Lead intelligence | Requirements, status, evidence, matches, next action and viewing-interest escalation |
-| Consent | STOP marks the lead opted out; START is required to resume |
-| Security | Peer binding, server allowlist, body limits, deduplication, origin checks and input/output policy layers |
-| Persistence | Cloudflare D1 workspaces, phone ownership, revision checks and event ledger |
-| Delivery | Vinext production build and owner-authenticated Sites deployment |
+| User access | Phone-number sign-up/login with secure sessions and optional Twilio Verify |
+| Onboarding | Required CRM and listing import before the dashboard opens |
+| CRM | 1–500 authorized contacts per workspace plus form and CSV additions |
+| Property data | 3,909-row historical Gurgaon CSV, 120-row sample catalog and user uploads |
+| Agent | Separate `estate-desk` OpenClaw personality restricted to real-estate tasks |
+| Messaging | WhatsApp is the conversation channel; signed events feed the website |
+| Lead intelligence | Requirements, status, property matches, next action and meeting readiness |
+| Dashboards | Live Overview, Meetings and Trends pages using server-sent events |
+| Exports | Downloadable manager CSV with buyer, agent-analysis and chat fields |
+| Consent | Inbound-only default, explicit opt-in support, STOP opt-out and START resume |
+| Persistence | Cloudflare D1 workspaces, contacts, phone ownership and event ledger |
+| Safety | Peer routing, server checks, policy plugin, deduplication and human confirmation |
 
-## Verification completed
+## Verification
 
-- Ten domain-level tests for qualification, budget conversion, property matching,
-  prompt rejection, STOP/START and WhatsApp ingestion.
-- Authenticated API smoke coverage for workspace access, phone association,
-  signed webhook events, deduplication, invalid actions and all dashboard routes.
-- TypeScript type-check and production application build.
-- Full CSV download endpoint and catalog-load checks.
+- Eleven domain tests cover matching, qualification, budget conversion,
+  meeting-readiness, prompt rejection, consent and WhatsApp ingestion.
+- API smoke tests cover authentication, onboarding, uploads, signed events,
+  deduplication, invalid actions, routes and dataset downloads.
+- TypeScript checking and the production application build are part of the
+  release checklist.
 
-## Known constraints
+## Known limits
 
-- The CRM is simulated and intentionally contains one contact.
-- Phone verification falls back to a clearly labelled demo code unless Twilio
-  Verify credentials are provided.
-- The hosted dashboard is private, while the current WhatsApp event receiver is
-  local. Production messaging needs an authenticated private tunnel or a
-  dedicated public webhook service.
-- The model guardrails reduce risk but do not replace human review. A human must
-  confirm pricing, availability, consent, legal facts and meeting details.
+- The included listings are historical test data and may not be available now.
+- SMS verification uses a labelled demo OTP unless Twilio is configured.
+- The WhatsApp connection and CRM watcher run locally with OpenClaw. A hosted
+  release needs a dedicated authenticated messaging service for each owner.
+- AI summaries are decision support. A manager must verify consent, price,
+  availability, legal facts and the final meeting time.
 
-## Campaign pipeline (2026-09-12 increment)
+## Next engineering work
 
-A second, multi-tenant track now sits alongside the single-workspace demo:
-campaigns each have their own allowlisted contacts, property inventory, raw
-message ledger, structured requirements and deterministic top-five matches.
-
-| Area | State |
-| --- | --- |
-| Allowlist | `campaign_contacts` gains `opted_out` / `agent_paused` flags; every outbound send is re-validated server-side via `assertOutboundMessageAllowed` (`lib/messaging.ts`), which fails closed on an invalid phone, unknown contact, opt-out, pause, or missing campaign |
-| Raw messages | `campaign_messages` is an immutable, idempotent ledger (unique on `campaign_id` + `provider_message_id`) reconstructable in chronological order |
-| Requirement extraction | `lib/requirements.ts` is a deterministic, regex-based stand-in for a real `RequirementExtractionProvider` (no AI credentials are configured in this environment); a failed/unusable extraction never overwrites a previously valid `campaign_requirements` row |
-| Matching | `lib/matching.ts` applies hard filters (budget, bedroom count) before scoring, always returns <=5 properties, and never lets a hot-property bonus override a hard requirement |
-| Handoff | An explicit request (`lib/messaging.ts#isHandoffRequest`) pauses the agent and creates a `handoffs` row; `agent_paused` only clears via the explicit `resume-agent` endpoint, never automatically |
-| Opt-out | STOP-family keywords set `opted_out`; only an exact `START` clears it; opted-out contacts are rejected by the same allowlist check used for every other send |
-
-Known gaps in this increment: no dashboard UI for the campaign track yet
-(API-only), no real WhatsApp/OpenClaw wiring for `/api/campaigns/**` (the
-routes exist and are tested, but nothing calls them in production yet), no
-Google Drive CSV import, and `lib/domain.ts`, `lib/store.ts`,
-`lib/campaigns.ts` and `lib/utils.ts` were reconstructed from call-site
-inference (see git history -- none of the four existed anywhere on any
-branch) rather than authored by the original team, so they should get a
-human review pass.
-
-## Next engineering increment
-
-Replace the simulated CRM with an authorised connector, add tenant-level contact
-consent records, move WhatsApp ingestion to a production webhook, introduce
-role-based access and add end-to-end tests against a disposable OpenClaw gateway.
+Add a production CRM connector, role-based team access, a hosted per-owner
+WhatsApp connection service, stronger audit views and disposable end-to-end
+tests for the gateway and webhook path.
