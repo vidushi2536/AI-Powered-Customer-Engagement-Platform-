@@ -52,6 +52,7 @@ import {
   type Property,
   type Workspace,
 } from '@/lib/domain';
+import CampaignManager from '@/components/campaign-manager';
 
 type ApiResult = {
   state: Workspace;
@@ -62,7 +63,7 @@ type ApiResult = {
   brief: ReturnType<typeof brief>;
 };
 
-const nav = ['Overview', 'Leads', 'Properties', 'Connections', 'Agent'];
+const nav = ['Overview', 'Leads', 'Properties', 'Connections', 'Agent', 'Campaigns'];
 const headings: Record<string, [string, string]> = {
   overview: [
     'Your next move.',
@@ -87,6 +88,10 @@ const headings: Record<string, [string, string]> = {
   login: [
     'Associate your WhatsApp number.',
     'Link the sender identity to this private dashboard workspace.',
+  ],
+  campaigns: [
+    'Every conversation, reviewable.',
+    'Handoff queue, raw transcript, structured summary and top matches for the multi-contact pipeline.',
   ],
 };
 
@@ -827,6 +832,8 @@ export default function EstateApp({
             </aside>
           </div>
         )}
+
+        {section === 'campaigns' && <CampaignManager />}
 
         {state && section === 'login' && (
           <div className="login-layout">

@@ -23,6 +23,12 @@ Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)*
   input/output policy plugin.
 - STOP/START consent lifecycle, prompt-injection rejection, message limits and
   server-side validation.
+- A second, multi-campaign pipeline (`/api/campaigns/**`, `/campaigns`
+  dashboard section): per-campaign contact allowlists, an immutable raw
+  message ledger, deterministic requirement extraction and property matching,
+  and a human-handoff queue with a manager-only resume control. See
+  `docs/implementation-status.md` for what's implemented versus still a gap
+  in this track.
 
 The owner-authenticated prototype is deployed at
 [estate-desk-lawbstah.kapooraman201.chatgpt.site](https://estate-desk-lawbstah.kapooraman201.chatgpt.site).
@@ -49,12 +55,18 @@ Copy-Item .env.example .dev.vars
 npm ci
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0000_early_sugar_man.sql
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0001_whatsapp_sync.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0002_spooky_starfox.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0003_campaign_conversation_pipeline.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0004_campaign_message_delivery_status.sql
 npm run dev
 ```
 
 Put the single permitted E.164 number in `ALLOWED_WHATSAPP_PHONE`; never commit
 the real value. Without Twilio credentials, phone verification is visibly in
-demo mode and uses code `123456`. See
+demo mode and uses code `123456`. Set `CAMPAIGN_SYNC_SECRET` to enable the
+multi-campaign allowlist/messages/handoff endpoints under `/api/campaigns/**`
+(the dashboard's own `/campaigns` section works without it, using your signed-in
+session instead). See
 [`code/estate-desk/README.md`](code/estate-desk/README.md) and
 [`openclaw/README.md`](openclaw/README.md) for full setup.
 
@@ -63,7 +75,7 @@ demo mode and uses code `123456`. See
 ```powershell
 cd code/estate-desk
 npx tsc --noEmit
-npx tsx --test tests/domain.test.ts
+npx tsx --test tests/domain.test.ts tests/messaging.test.ts tests/campaign-matching.test.ts
 npm run build
 ```
 

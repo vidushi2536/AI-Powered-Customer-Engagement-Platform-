@@ -7,7 +7,9 @@ export default async function Page({
 }) {
   const { section } = await params;
   if (
-    !['leads', 'properties', 'connections', 'agent', 'login'].includes(section)
+    !['leads', 'properties', 'connections', 'agent', 'login', 'campaigns'].includes(
+      section,
+    )
   )
     notFound();
   return <EstateApp section={section} />;

@@ -128,6 +128,7 @@ for (const route of [
   '/connections',
   '/agent',
   '/login',
+  '/campaigns',
 ])
   assert.equal((await fetch(base + route, { headers })).status, 200, route);
 assert.equal(
@@ -135,3 +136,170 @@ assert.equal(
   200,
 );
 console.log('PASS all routes and the full testing CSV respond');
+
+// ---------------------------------------------------------------------
+// Campaign pipeline (allowlist, raw messages, extraction, matching,
+// opt-out, human handoff). Requires CAMPAIGN_SYNC_SECRET in .dev.vars to
+// match `campaignHeaders` below.
+// ---------------------------------------------------------------------
+
+const campaignHeaders = {
+  'Content-Type': 'application/json',
+  Authorization: 'Bearer campaign-local-sync-test-2026',
+};
+const campaignPhone = '+15550001111';
+
+assert.equal(
+  (await fetch(base + '/api/campaigns', { headers: { 'Content-Type': 'application/json' } })).status,
+  401,
+);
+console.log('PASS unauthenticated caller cannot list campaigns');
+
+const created = await post(
+  {
+    name: `Smoke ${run}`,
+    contactsCsv: `phone\n${campaignPhone}`,
+    propertiesCsv: 'location,bedrooms,sqft,price_lakhs\nDowntown,2,900,2200',
+  },
+  200,
+  '/api/campaigns',
+  headers, // manager session - workspaceId is derived from identity(), not the body
+);
+const campaignId = created.campaign.id;
+assert.equal(created.contactsImported, 1);
+assert.equal(created.propertiesImported, 1);
+console.log('PASS campaign creation imports one contact and one property, owned by the creating manager');
+
+const ownedCampaigns = await (await fetch(base + '/api/campaigns', { headers })).json();
+assert.equal(ownedCampaigns.campaigns.some((c) => c.id === campaignId), true);
+console.log('PASS the creating manager sees the new campaign in their own list');
+
+const allowlist = await (
+  await fetch(base + `/api/campaigns/${campaignId}/contacts`, { headers: campaignHeaders })
+).json();
+assert.equal(allowlist.some((c) => c.phone === campaignPhone), true);
+console.log('PASS the imported contact appears on the campaign allowlist');
+
+async function campaignMessage(body, status = 200) {
+  const response = await fetch(base + `/api/campaigns/${campaignId}/messages`, {
+    method: 'POST',
+    headers: campaignHeaders,
+    body: JSON.stringify(body),
+  });
+  const json = await response.json();
+  assert.equal(response.status, status, JSON.stringify(json));
+  return json;
+}
+
+await campaignMessage(
+  { phone: '+15559998888', direction: 'inbound', body: 'Hello', providerMessageId: `${run}-unknown` },
+  403,
+);
+console.log('PASS a number not on the campaign allowlist is rejected on inbound');
+
+const inbound1 = await campaignMessage({
+  phone: campaignPhone,
+  direction: 'inbound',
+  body: 'Looking for a 2 bedroom near Downtown, budget under 2500.',
+  providerMessageId: `${run}-in-1`,
+});
+assert.equal(inbound1.requirementsReady, true);
+assert.equal(inbound1.matchCount >= 1, true);
+console.log('PASS inbound message triggers requirement extraction and matching');
+
+const duplicate = await campaignMessage({
+  phone: campaignPhone,
+  direction: 'inbound',
+  body: 'Looking for a 2 bedroom near Downtown, budget under 2500.',
+  providerMessageId: `${run}-in-1`,
+});
+assert.equal(duplicate.duplicate, true);
+console.log('PASS duplicate provider message id is ignored');
+
+const requirements = await (
+  await fetch(base + `/api/campaigns/${campaignId}/contacts/${encodeURIComponent(campaignPhone)}/requirements`, {
+    headers: campaignHeaders,
+  })
+).json();
+assert.equal(requirements.requirements.rooms_needed, 2);
+const matchesResult = await (
+  await fetch(base + `/api/campaigns/${campaignId}/contacts/${encodeURIComponent(campaignPhone)}/matches`, {
+    headers: campaignHeaders,
+  })
+).json();
+assert.equal(matchesResult.matches.length >= 1, true);
+assert.equal(matchesResult.matches.length <= 5, true);
+console.log('PASS structured requirements and top-five matches are retrievable');
+
+await campaignMessage(
+  { phone: '+15559998888', direction: 'outbound', body: 'Hi there', providerMessageId: `${run}-out-bad` },
+  403,
+);
+console.log('PASS outbound send to a non-allowlisted number is rejected server-side');
+
+const outboundOk = await campaignMessage({
+  phone: campaignPhone,
+  direction: 'outbound',
+  body: 'Here are a few options that might work.',
+  providerMessageId: `${run}-out-1`,
+});
+assert.equal(outboundOk.duplicate, false);
+console.log('PASS outbound send to the allowlisted contact succeeds');
+
+await campaignMessage({
+  phone: campaignPhone,
+  direction: 'inbound',
+  body: 'STOP',
+  providerMessageId: `${run}-stop`,
+});
+await campaignMessage(
+  { phone: campaignPhone, direction: 'outbound', body: 'Following up', providerMessageId: `${run}-out-2` },
+  403,
+);
+console.log('PASS STOP opts the contact out and blocks further outbound sends');
+
+await campaignMessage({
+  phone: campaignPhone,
+  direction: 'inbound',
+  body: 'START',
+  providerMessageId: `${run}-start`,
+});
+const afterStart = await campaignMessage({
+  phone: campaignPhone,
+  direction: 'inbound',
+  body: 'I want to speak to a human please',
+  providerMessageId: `${run}-handoff`,
+});
+assert.equal(afterStart.handoffRequested, true);
+console.log('PASS START re-enables the contact and a handoff request pauses the agent');
+
+await campaignMessage(
+  { phone: campaignPhone, direction: 'outbound', body: 'Are you still there?', providerMessageId: `${run}-out-3` },
+  403,
+);
+console.log('PASS outbound sends stay blocked while paused for human handoff');
+
+const handoffQueue = await (
+  await fetch(base + `/api/campaigns/${campaignId}/handoffs`, { headers: campaignHeaders })
+).json();
+assert.equal(
+  handoffQueue.handoffs.some((h) => h.phone === campaignPhone && h.status === 'pending'),
+  true,
+);
+console.log('PASS the pending handoff appears in the manager handoff queue');
+
+await fetch(base + `/api/campaigns/${campaignId}/contacts/${encodeURIComponent(campaignPhone)}/resume-agent`, {
+  method: 'POST',
+  headers: campaignHeaders,
+}).then(async (response) => {
+  assert.equal(response.status, 401, 'the sync secret alone must not be able to resume the agent');
+});
+console.log('PASS resume-agent rejects the agent-level sync secret (manager-only action)');
+
+const resumed = await fetch(
+  base + `/api/campaigns/${campaignId}/contacts/${encodeURIComponent(campaignPhone)}/resume-agent`,
+  { method: 'POST', headers },
+);
+assert.equal(resumed.status, 200);
+console.log('PASS an authenticated manager session can resume the agent');
+

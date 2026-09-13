@@ -5,6 +5,8 @@ import {
   parsePropertiesCsv,
   newId,
 } from '@/lib/campaigns';
+import { authenticateCampaignCaller } from '@/lib/campaign-auth';
+import { identity } from '@/lib/store';
 
 function fail(message: string, status = 400) {
   return Response.json({ error: message }, { status });
@@ -15,15 +17,23 @@ function db() {
   return env.DB;
 }
 
-// TODO: replace with real dashboard auth once lib/store.ts (identity/session
-// handling) is available. For now this route has no auth of its own — do not
-// expose it publicly without adding a check.
+export async function GET(request: Request) {
+  const caller = await authenticateCampaignCaller(request);
+  if (!caller) return fail('Unauthorized', 401);
 
-export async function GET() {
   const database = db();
-  const { results: campaigns } = await database
-    .prepare('SELECT * FROM campaigns ORDER BY created_at DESC')
-    .all<Record<string, unknown>>();
+  // A manager only ever sees their own workspace's campaigns; an
+  // agent-authenticated (sync secret) caller is a trusted server-to-server
+  // integration and may list across workspaces.
+  const { results: campaigns } =
+    caller.kind === 'manager'
+      ? await database
+          .prepare('SELECT * FROM campaigns WHERE workspace_id=? ORDER BY created_at DESC')
+          .bind(await identity())
+          .all<Record<string, unknown>>()
+      : await database
+          .prepare('SELECT * FROM campaigns ORDER BY created_at DESC')
+          .all<Record<string, unknown>>();
 
   const withCounts = await Promise.all(
     campaigns.map(async (c) => {
@@ -54,6 +64,8 @@ type CreateBody = {
 };
 
 export async function POST(request: Request) {
+  const caller = await authenticateCampaignCaller(request);
+  if (!caller) return fail('Unauthorized', 401);
   if (Number(request.headers.get('content-length') || 0) > 2_000_000)
     return fail('Upload too large', 413);
 
@@ -68,7 +80,13 @@ export async function POST(request: Request) {
   if (!name || name.length > 120)
     return fail('Campaign name is required (max 120 chars)');
 
-  const workspaceId = String(body.workspaceId || '').trim();
+  // The owning workspace is derived from the authenticated caller, never
+  // taken from the request body - a manager cannot create a campaign
+  // under someone else's workspace by editing the JSON payload.
+  const workspaceId =
+    caller.kind === 'manager'
+      ? await identity()
+      : String(body.workspaceId || '').trim();
   if (!workspaceId) return fail('workspaceId is required');
 
   const contactsCsv = String(body.contactsCsv || '');
