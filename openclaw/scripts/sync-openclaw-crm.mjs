@@ -1,18 +1,36 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = dirname(dirname(fileURLToPath(import.meta.url)));
+const integrationRoot = dirname(dirname(fileURLToPath(import.meta.url)));
+const repositoryRoot = dirname(integrationRoot);
+const runtimeRoot = process.env.OPENCLAW_RUNTIME_ROOT || dirname(repositoryRoot);
 const ownerPhone = normalize(
   process.argv.find((value) => /^\+?\d[\d\s()-]{8,}$/.test(value)) ||
     process.env.OPENCLAW_OWNER_PHONE,
 );
 const watch = process.argv.includes('--watch');
 const dashboard = process.env.ESTATE_DESK_URL || 'http://localhost:3000';
-const varsPath = join(root, 'estate-desk', '.dev.vars');
-const configPath = join(root, 'lawbstah-home', 'openclaw.json');
-const catalogPath = join(root, 'lawbstah-workspace-estate-desk', 'AGENTS.md');
+const intervalMs = Math.max(
+  500,
+  Number(process.env.ESTATE_DESK_SYNC_INTERVAL_MS || 1000),
+);
+const varsPath =
+  process.env.ESTATE_DESK_VARS_PATH ||
+  [
+    join(runtimeRoot, 'estate-desk', '.dev.vars'),
+    join(repositoryRoot, 'code', 'estate-desk', '.dev.vars'),
+  ].find((candidate) => existsSync(candidate)) ||
+  join(repositoryRoot, 'code', 'estate-desk', '.dev.vars');
+const configPath = resolve(
+  process.env.OPENCLAW_CONFIG_PATH ||
+    join(runtimeRoot, 'lawbstah-home', 'openclaw.json'),
+);
+const catalogPath = resolve(
+  process.env.OPENCLAW_ESTATE_WORKSPACE_PATH ||
+    join(runtimeRoot, 'lawbstah-workspace-estate-desk', 'AGENTS.md'),
+);
 
 function normalize(value) {
   const digits = String(value || '').replace(/\D/g, '');
@@ -49,30 +67,39 @@ function writeOpenClawConfig(phones) {
   const currentText = readFileSync(configPath, 'utf8');
   const config = JSON.parse(currentText);
   const priorAllowFrom = config.channels?.whatsapp?.allowFrom || [];
+  const priorAccountAllowFrom =
+    config.channels?.whatsapp?.accounts?.shellsworth?.allowFrom || [];
   const existingBindings = Array.isArray(config.bindings) ? config.bindings : [];
   const retained = existingBindings.filter(
     (binding) =>
       !(
-        binding?.agentId === 'estate-desk' &&
         binding?.match?.channel === 'whatsapp' &&
-        binding?.match?.accountId === 'shellsworth' &&
-        binding?.match?.peer?.kind === 'direct'
+        binding?.match?.accountId === 'shellsworth'
       ),
   );
-  const direct = phones.map((phone) => ({
+  const estateDeskRoute = {
+    type: 'route',
     agentId: 'estate-desk',
     match: {
       channel: 'whatsapp',
       accountId: 'shellsworth',
-      peer: { kind: 'direct', id: phone },
     },
-  }));
-  const bindings = [...direct, ...retained];
-  if (sameJson(priorAllowFrom, phones) && sameJson(existingBindings, bindings)) return false;
+  };
+  const bindings = [estateDeskRoute, ...retained];
+  if (
+    sameJson(priorAllowFrom, phones) &&
+    sameJson(priorAccountAllowFrom, phones) &&
+    sameJson(existingBindings, bindings)
+  )
+    return false;
   config.channels ||= {};
   config.channels.whatsapp ||= {};
+  config.channels.whatsapp.accounts ||= {};
+  config.channels.whatsapp.accounts.shellsworth ||= {};
   config.channels.whatsapp.dmPolicy = 'allowlist';
   config.channels.whatsapp.allowFrom = phones;
+  config.channels.whatsapp.accounts.shellsworth.dmPolicy = 'allowlist';
+  config.channels.whatsapp.accounts.shellsworth.allowFrom = phones;
   if (!existsSync(`${configPath}.estate-desk-backup`))
     copyFileSync(configPath, `${configPath}.estate-desk-backup`);
   writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
@@ -101,21 +128,22 @@ async function synchronize() {
     );
     if (!phones.length) throw new Error('Waiting for this owner to finish CRM onboarding.');
     const fingerprint = JSON.stringify([phones, context.properties]);
-    if (fingerprint === lastFingerprint) return;
     writeCatalog(context.properties);
     const configChanged = writeOpenClawConfig(phones);
     if (configChanged) {
       const restarted = spawnSync('docker', ['compose', 'restart', 'openclaw-gateway'], {
-        cwd: root,
+        cwd: runtimeRoot,
         stdio: 'inherit',
       });
       if (restarted.status !== 0) throw new Error('OpenClaw restart failed.');
     }
+    const dataChanged = fingerprint !== lastFingerprint;
     lastFingerprint = fingerprint;
     lastProblem = '';
-    console.log(
-      `[estate-desk-crm] synchronized ${phones.length} CRM contact(s) and ${context.properties.length} listing(s) for ${ownerPhone}`,
-    );
+    if (dataChanged || configChanged)
+      console.log(
+        `[estate-desk-crm] synchronized ${phones.length} CRM contact(s) and ${context.properties.length} listing(s) for ${ownerPhone}`,
+      );
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Synchronization failed.';
     if (message !== lastProblem) console.warn(`[estate-desk-crm] ${message}`);
@@ -125,4 +153,4 @@ async function synchronize() {
 }
 
 await synchronize();
-if (watch) setInterval(() => void synchronize(), 10000);
+if (watch) setInterval(() => void synchronize(), intervalMs);

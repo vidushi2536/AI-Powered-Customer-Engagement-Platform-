@@ -453,12 +453,14 @@ export default function WorkspaceApp({ section }: { section: Section }) {
       setInsights(result.insights || null);
       setNotice(success);
       setModal(null);
+      return true;
     } catch (reason) {
       setError(
         reason instanceof Error
           ? reason.message
           : 'Could not update workspace.',
       );
+      return false;
     } finally {
       setBusy(false);
     }
@@ -491,10 +493,10 @@ export default function WorkspaceApp({ section }: { section: Section }) {
     }
   }
 
-  function addClient(event: SyntheticEvent<HTMLFormElement>) {
+  async function addClient(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const phone = normalisePhone(clientForm.phone);
-    void post(
+    const added = await post(
       {
         action: 'addContacts',
         contacts: [{ ...clientForm, phone }],
@@ -502,6 +504,10 @@ export default function WorkspaceApp({ section }: { section: Section }) {
       },
       'Client added to the CRM allowlist.',
     );
+    if (added) {
+      setClientForm({ name: '', phone: '', consent: 'inbound-only' });
+      setConfirmed(false);
+    }
   }
 
   function addProperty(event: SyntheticEvent<HTMLFormElement>) {
@@ -853,16 +859,23 @@ export default function WorkspaceApp({ section }: { section: Section }) {
               <button
                 className="primary-action wide"
                 disabled={busy || !contacts.length || !confirmed}
-                onClick={() =>
-                  void post(
+                onClick={async () => {
+                  const count = contacts.length;
+                  const added = await post(
                     {
                       action: 'addContacts',
                       contacts,
                       consentConfirmed: confirmed,
                     },
-                    `${contacts.length} contacts added.`,
-                  )
-                }
+                    `${count} contacts added.`,
+                  );
+                  if (added) {
+                    setContacts([]);
+                    setCrmName('');
+                    setConfirmed(false);
+                    if (addCrmInput.current) addCrmInput.current.value = '';
+                  }
+                }}
               >
                 {busy ? 'Adding…' : `Add ${contacts.length || ''} contacts`}
               </button>
