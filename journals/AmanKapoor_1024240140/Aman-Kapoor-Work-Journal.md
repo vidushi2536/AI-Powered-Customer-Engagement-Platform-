@@ -4,7 +4,7 @@
 
 **Roll number:** 1024240140
 
-**Updated:** 13 September 2026
+**Updated:** 14 September 2026
 
 **Project:** AI-Powered Customer Engagement Platform
 
@@ -86,3 +86,16 @@ properties, and the manager sees the result live. The manager can identify who
 is ready for a physical meeting, what to show them and what action to take next.
 The remaining production work is a hosted per-owner WhatsApp connector, a real
 CRM integration, role-based team access and live inventory verification.
+
+## Project proposal update
+
+- Rebuilt the project proposal in the official TIET `tietreport` format.
+- Added the correct student names, roll numbers, Group 3X11, third-year status
+  and UCS503 Software Engineering course details.
+- Added four different flow diagrams covering the user journey, system
+  architecture, live WhatsApp event pipeline and physical-meeting decision flow.
+- Spread the diagrams across the proposal so that no two diagrams appear one
+  after another.
+- Added a bibliography and included the portable `tietreport.cls` file so the
+  proposal source can be compiled outside the original Overleaf project.
+- Generated and visually checked the final 17-page proposal PDF.
