@@ -26,7 +26,13 @@ export default function Landing() {
 
   useEffect(() => {
     void fetch('/api/auth', { cache: 'no-store' })
-      .then((response) => response.json())
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error('Could not check the current session.');
+        const body = await response.text();
+        if (!body) throw new Error('The session check returned no data.');
+        return JSON.parse(body) as unknown;
+      })
       .then((value: unknown) => {
         const result = value as {
           authenticated?: boolean;
@@ -36,6 +42,9 @@ export default function Landing() {
           window.location.replace(
             result.onboardingComplete ? '/dashboard' : '/onboarding',
           );
+      })
+      .catch(() => {
+        setError('Could not check the current session. You can still sign in.');
       });
   }, []);
 
