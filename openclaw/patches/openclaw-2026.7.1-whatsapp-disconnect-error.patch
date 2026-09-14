@@ -1,0 +1,11 @@
+--- a/dist/session-DriaHt7V.js
++++ b/dist/session-DriaHt7V.js
+@@ -208,7 +208,7 @@ async function waitForWaConnection(sock, options = { timeout: "none" }) {
+ 			}
+ 			if (update.connection === "close") {
+ 				cleanup();
+-				reject(toLintErrorObject(update.lastDisconnect ?? /* @__PURE__ */ new Error("Connection closed"), "Non-Error rejection"));
++				reject(toLintErrorObject(update.lastDisconnect?.error ?? update.lastDisconnect ?? /* @__PURE__ */ new Error("Connection closed"), "Non-Error rejection"));
+ 			}
+ 		};
+ 		sock.ev.on("connection.update", handler);

@@ -26,3 +26,13 @@ on its own account and agent binding so both channels can run at the same time.
 See [`code/estate-desk/OPENCLAW-SETUP.md`](../code/estate-desk/OPENCLAW-SETUP.md)
 for the complete event path. OpenClaw command names can change between releases,
 so check the installed version before changing the live gateway.
+
+## OpenClaw 2026.7.1 WhatsApp QR workaround
+
+The packaged WhatsApp extension can hide its initial disconnect status inside a
+`Non-Error rejection`, preventing the login controller from taking its normal
+timeout/restart path and showing a QR. The exact one-line runtime workaround used
+for the prototype is preserved in
+[`patches/openclaw-2026.7.1-whatsapp-disconnect-error.patch`](patches/openclaw-2026.7.1-whatsapp-disconnect-error.patch).
+Apply it only to the matching OpenClaw/plugin version, then restart the gateway.
+Do not commit the live credential directory or linked-device state.
