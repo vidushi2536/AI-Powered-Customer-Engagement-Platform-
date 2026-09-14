@@ -72,6 +72,21 @@ test('explicit property interest requests human follow-up', () => {
   assert.equal(state.interestedId, 'GGN-0004');
 });
 
+test('unique sector interest and a proposed time create a meeting-ready lead', () => {
+  let state = qualify(
+    fresh(),
+    'My budget is 80 lakh and I need a 2 bedroom house',
+  );
+  state = qualify(state, 'I like the one in sector 107. Can I visit?');
+  assert.equal(state.interestedId, 'GGN-0004');
+  assert.equal(state.status, 'Follow up');
+  state = qualify(state, 'Yes tmrw at 11am');
+  assert.equal(state.status, 'Viewing proposed');
+  assert.equal(state.meeting?.propertyId, 'GGN-0004');
+  state = qualify(state, 'Thanks');
+  assert.equal(state.status, 'Viewing proposed');
+});
+
 test('unknown listings cannot trigger follow-up', () => {
   const state = qualify(fresh(), 'I want to visit GGN-9999');
   assert.equal(state.interestedId, null);

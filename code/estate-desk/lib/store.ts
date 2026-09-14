@@ -77,7 +77,7 @@ function hydrate(value: Workspace): Workspace {
           },
         ]
       : [];
-  const leads: Lead[] = Array.isArray(value.leads)
+  const leads: Lead[] = (Array.isArray(value.leads)
     ? value.leads
     : legacyPhone
       ? [
@@ -93,7 +93,12 @@ function hydrate(value: Workspace): Workspace {
             updatedAt: value.updatedAt,
           },
         ]
-      : [];
+      : []
+  ).map((lead) =>
+    lead.meeting && lead.status !== 'Opted out'
+      ? { ...lead, status: 'Viewing proposed' }
+      : lead,
+  );
   return {
     ...base,
     ...value,

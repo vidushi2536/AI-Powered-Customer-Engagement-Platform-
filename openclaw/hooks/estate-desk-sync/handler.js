@@ -53,8 +53,14 @@ export default async function estateDeskSync(event) {
       }),
       signal: AbortSignal.timeout(5000),
     });
-    if (!response.ok)
-      console.warn('[estate-desk-sync] dashboard rejected event', response.status);
+    if (!response.ok) {
+      const reason = (await response.text()).slice(0, 240);
+      console.warn(
+        '[estate-desk-sync] dashboard rejected event',
+        response.status,
+        reason,
+      );
+    }
   } catch (error) {
     console.warn(
       '[estate-desk-sync] dashboard unavailable',

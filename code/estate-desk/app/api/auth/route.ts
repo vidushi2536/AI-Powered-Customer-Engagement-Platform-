@@ -158,6 +158,19 @@ export async function POST(request: Request) {
       .bind(phone)
       .first<{ workspace_id: string }>();
     const workspaceId = owner?.workspace_id || crypto.randomUUID();
+    let onboardingComplete = false;
+    if (owner) {
+      const existing = await db
+        .prepare('SELECT state FROM workspaces WHERE id=?')
+        .bind(workspaceId)
+        .first<{ state: string }>();
+      if (existing) {
+        const saved = JSON.parse(existing.state) as {
+          onboardingComplete?: boolean;
+        };
+        onboardingComplete = saved.onboardingComplete === true;
+      }
+    }
     if (!owner) {
       const state = initial();
       state.ownerPhone = phone;
@@ -195,7 +208,7 @@ export async function POST(request: Request) {
     ]);
     const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
     return Response.json(
-      { ok: true, onboardingComplete: false },
+      { ok: true, onboardingComplete },
       {
         headers: {
           'Set-Cookie': `estate_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}${secure}`,

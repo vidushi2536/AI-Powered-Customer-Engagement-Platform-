@@ -275,6 +275,25 @@ export function qualify(state: Workspace, message: string): Workspace {
     /\b(interested|viewing|visit|schedule|meet|book|see it|see this)\b/i.test(
       message,
     );
+  const viewingTime = message.match(
+    /\b(tomorrow|tmrw|today|this weekend|next weekend|(?:mon|tues|wednes|thurs|fri|satur|sun)day)(?:\s+at)?\s+([0-9]{1,2}(?::[0-9]{2})?\s*(?:am|pm)?)?/i,
+  );
+  if (
+    next.interestedId &&
+    viewingTime &&
+    /\b(yes|sure|okay|ok|confirm|visit|viewing|meet)\b/i.test(message)
+  ) {
+    const requestedTime = viewingTime[0].trim();
+    next.status = 'Viewing proposed';
+    next.meeting = {
+      propertyId: next.interestedId,
+      date: requestedTime,
+      note: 'Buyer requested a physical viewing; a human advisor must confirm it.',
+    };
+    return reply(
+      `Your requested physical viewing for ${next.interestedId} is noted for ${requestedTime}. A human advisor will verify availability and confirm the appointment.`,
+    );
+  }
   if (target && interest) {
     next.interestedId = target.id;
     next.status = 'Follow up';
@@ -283,6 +302,8 @@ export function qualify(state: Workspace, message: string): Workspace {
     );
   }
   if (interest) {
+    if (!next.interestedId && currentMatches.length === 1)
+      next.interestedId = currentMatches[0].id;
     next.status = next.interestedId ? 'Follow up' : 'Qualifying';
     return reply(
       next.interestedId
@@ -310,13 +331,15 @@ export function qualify(state: Workspace, message: string): Workspace {
       `${!requirements.budget ? 'What is your maximum budget in INR lakhs? ' : ''}${!requirements.bedrooms ? 'How many bedrooms do you need? ' : ''}You can also share a Gurugram sector and buying timeline.`,
     );
   }
-  next.status = currentMatches.length
-    ? /browsing|later|next year/.test(requirements.timeline || '')
-      ? 'Nurture'
-      : next.interestedId
-        ? 'Follow up'
-        : 'Qualifying'
-    : 'No match';
+  next.status = next.meeting
+    ? 'Viewing proposed'
+    : currentMatches.length
+      ? /browsing|later|next year/.test(requirements.timeline || '')
+        ? 'Nurture'
+        : next.interestedId
+          ? 'Follow up'
+          : 'Qualifying'
+      : 'No match';
   if (!currentMatches.length)
     return reply(
       'There is no exact match in the current sample. Your advisor can review the inventory gap with you.',
