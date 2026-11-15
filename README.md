@@ -12,8 +12,7 @@ Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)*
 
 ## Current application
 
-- Phone-number sign-up and login, with a clearly marked demo OTP (`123456`) when
-  Twilio Verify is not configured.
+- Google OAuth sign-in with a separate private workspace for each user.
 - Guided onboarding for a CRM contact CSV and a property-listing CSV.
 - Multi-contact workspaces with consent states: `inbound-only`, `opted-in` and
   `opted-out`.
@@ -29,12 +28,16 @@ Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)*
   input/output policy that rejects unrelated or suspicious requests.
 - STOP/START handling, contact authorization checks, message limits and human
   confirmation of prices, availability and physical meetings.
+- Per-workspace OpenClaw agents and WhatsApp accounts with isolated CRM,
+  listing, conversation and meeting context.
+- Model inheritance: Estate Desk agents always use the OpenClaw gateway's
+  current default model instead of storing their own provider override.
 
 ## Repository layout
 
 ```text
 code/estate-desk/       Vinext/React app, APIs, D1 schema, tests and sample data
-openclaw/               Secret-free workspace, sync hook, policy and CRM bridge
+openclaw/               Secret-free workspace, policy, hooks and WhatsApp runtime
 docs/                   MkDocs documentation and project diagrams
 journals/               Individual contribution journals
 project-proposal/       LaTeX project proposal
@@ -52,6 +55,10 @@ npm ci
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0000_early_sugar_man.sql
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0001_whatsapp_sync.sql
 npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0002_long_cannonball.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0003_google_oauth.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0004_cloud_whatsapp.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0005_workspace_isolation.sql
+npx wrangler d1 execute site-creator-d1 --local --config wrangler.local.json --file drizzle/0006_openclaw_runtime.sql
 npm run dev
 ```
 
@@ -59,6 +66,32 @@ Open [http://localhost:3000/](http://localhost:3000/). Sign up with the phone
 number that owns the linked WhatsApp workspace, then upload the CRM and listing
 files. See [`code/estate-desk/OPENCLAW-SETUP.md`](code/estate-desk/OPENCLAW-SETUP.md)
 for the local OpenClaw bridge.
+
+## Common local fixes
+
+### “WhatsApp is still closing the previous connection”
+
+This should take only 10–30 seconds. If it lasts more than one minute, check
+that the long-running bridge is listening on port `18791`. The website and
+Docker gateway can both be healthy while this separate process is stopped.
+
+```powershell
+cd openclaw\runtime
+node server.mjs
+```
+
+Then refresh onboarding, select **Connect WhatsApp** once and scan the new QR.
+If WhatsApp reports a terminal conflict, clear only that workspace account's
+dead session and request a new QR; do not delete its CRM or property data.
+
+### OpenRouter billing error while OpenAI OAuth is active
+
+Check `openclaw models status --json` and `openclaw agents list --json`. The
+gateway default and every Estate Desk agent should resolve to the same model.
+A per-agent value such as `openrouter/~openai/gpt-luna-latest` bypasses OpenAI
+OAuth and uses OpenRouter credits instead. Remove the agent's `model` field so
+it inherits `agents.defaults.model.primary`. New Estate Desk agents are created
+without `--model`, so later default-model changes apply automatically.
 
 ## Validate
 

@@ -64,6 +64,7 @@ async function wa(
           direction,
           channelId: 'whatsapp',
           accountId: 'shellsworth',
+          ownerPhone,
           contactPhone: phone,
           text: message,
           timestamp: new Date().toISOString(),
@@ -92,6 +93,7 @@ console.log('PASS phone verification creates an isolated application session');
 
 await action({
   action: 'onboarding',
+  ownerPhone,
   consentConfirmed: true,
   contacts: [
     { phone: contactPhone, name: 'Smoke buyer', consent: 'inbound-only' },
@@ -109,7 +111,8 @@ await action({
   ],
 });
 let result = await workspace();
-assert.equal(result.state.onboardingComplete, true);
+assert.equal(result.state.onboardingComplete, false);
+assert.equal(result.state.whatsapp.connected, false);
 assert.equal(result.stats.contacts, 1);
 assert.equal(result.stats.catalog, 1);
 const liveResponse = await fetch(base + '/api/workspace/stream', {
@@ -130,7 +133,7 @@ assert.deepEqual(
   context.result.contacts.map((contact) => contact.phone),
   [contactPhone],
 );
-console.log('PASS CRM and listing CSV-shaped data complete onboarding');
+console.log('PASS CRM and listing data remain isolated while WhatsApp linking is pending');
 console.log('PASS live workspace stream sends dashboard updates');
 
 await action({

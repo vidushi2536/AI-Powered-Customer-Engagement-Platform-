@@ -1,11 +1,12 @@
 import { ingestWhatsApp, normalisePhone } from '@/lib/domain';
-import { database, read, runtime, save } from '@/lib/store';
+import { database, hashToken, read, runtime, save } from '@/lib/store';
 
 type IncomingEvent = {
   id?: unknown;
   direction?: unknown;
   channelId?: unknown;
   accountId?: unknown;
+  ownerPhone?: unknown;
   contactPhone?: unknown;
   text?: unknown;
   timestamp?: unknown;
@@ -25,10 +26,21 @@ export async function GET(request: Request) {
   const secret = runtime().WHATSAPP_SYNC_SECRET;
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`)
     return fail('Unauthorized', 401);
+  const ownerPhone = normalisePhone(
+    new URL(request.url).searchParams.get('ownerPhone') || '',
+  );
+  if (!/^\+\d{10,15}$/.test(ownerPhone))
+    return fail('A valid ownerPhone is required', 400);
+  const owner = await database()
+    .prepare('SELECT workspace_id FROM phone_owners WHERE phone=?')
+    .bind(ownerPhone)
+    .first<{ workspace_id: string }>();
+  if (!owner) return fail('Owner workspace not found', 404);
   const count = await database()
     .prepare(
-      "SELECT COUNT(*) AS count FROM workspace_contacts WHERE consent!='opted-out'",
+      "SELECT COUNT(*) AS count FROM workspace_contacts WHERE workspace_id=? AND consent!='opted-out'",
     )
+    .bind(owner.workspace_id)
     .first<{ count: number }>();
   return Response.json({
     ok: true,
@@ -39,10 +51,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const secret = runtime().WHATSAPP_SYNC_SECRET;
-  if (!secret) return fail('WhatsApp sync is not configured', 503);
-  if (request.headers.get('authorization') !== `Bearer ${secret}`)
-    return fail('Unauthorized', 401);
   if (Number(request.headers.get('content-length') || 0) > 16000)
     return fail('Payload too large', 413);
 
@@ -56,6 +64,7 @@ export async function POST(request: Request) {
   const direction = body.direction;
   const channelId = textValue(body.channelId);
   const accountId = textValue(body.accountId);
+  const ownerPhone = normalisePhone(textValue(body.ownerPhone));
   const contactPhone = normalisePhone(textValue(body.contactPhone));
   const text = textValue(body.text).trim();
   const occurredAt = new Date(
@@ -65,23 +74,48 @@ export async function POST(request: Request) {
   );
   if (!id || !['received', 'sent'].includes(String(direction)))
     return fail('Invalid event');
-  if (channelId !== 'whatsapp' || accountId !== 'shellsworth')
+  if (channelId !== 'whatsapp' || !accountId)
     return fail('Channel not allowed', 403);
   if (!/^\+\d{10,15}$/.test(contactPhone)) return fail('Invalid contact', 403);
   if (!text || text.length > 1200) return fail('Message length not allowed');
   if (!Number.isFinite(occurredAt.getTime())) return fail('Invalid timestamp');
 
   const db = database();
+  const authorization = request.headers.get('authorization') || '';
+  const presentedToken = authorization.startsWith('Bearer ')
+    ? authorization.slice('Bearer '.length)
+    : '';
+  const runtimeWorkspace = presentedToken
+    ? await db
+        .prepare(
+          'SELECT workspace_id FROM whatsapp_connections WHERE runtime_account_id=? AND sync_token_hash=? AND provider=?',
+        )
+        .bind(accountId, await hashToken(presentedToken), 'openclaw')
+        .first<{ workspace_id: string }>()
+    : null;
+  const legacySecret = runtime().WHATSAPP_SYNC_SECRET;
+  const legacyAuthorized =
+    Boolean(legacySecret) && authorization === `Bearer ${legacySecret}`;
+  const ownerWorkspace =
+    runtimeWorkspace ||
+    (legacyAuthorized && /^\+\d{10,15}$/.test(ownerPhone)
+      ? await db
+          .prepare('SELECT workspace_id FROM phone_owners WHERE phone=?')
+          .bind(ownerPhone)
+          .first<{ workspace_id: string }>()
+      : null);
+  if (!runtimeWorkspace && !legacyAuthorized) return fail('Unauthorized', 401);
+  if (!ownerWorkspace) return fail('Owner workspace not found', 403);
   const duplicate = await db
-    .prepare('SELECT id FROM whatsapp_events WHERE id=?')
-    .bind(id)
+    .prepare('SELECT id FROM whatsapp_events WHERE workspace_id=? AND id=?')
+    .bind(ownerWorkspace.workspace_id, id)
     .first();
   if (duplicate) return Response.json({ ok: true, duplicate: true });
   const owner = await db
     .prepare(
-      'SELECT workspace_id,consent FROM workspace_contacts WHERE phone=?',
+      'SELECT workspace_id,consent FROM workspace_contacts WHERE workspace_id=? AND phone=?',
     )
-    .bind(contactPhone)
+    .bind(ownerWorkspace.workspace_id, contactPhone)
     .first<{ workspace_id: string; consent: string }>();
   if (!owner) return fail('Contact is not in an onboarded CRM', 403);
   if (owner.consent === 'opted-out' && direction === 'sent')

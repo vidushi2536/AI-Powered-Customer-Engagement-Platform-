@@ -152,6 +152,7 @@ test('converts crores and normalises the allowlisted number', () => {
   const state = qualify(fresh(), '2 BHK, budget 1.2 crore');
   assert.equal(state.requirements.budget, 120);
   assert.equal(normalisePhone('+91 77559 71789'), '+917755971789');
+  assert.equal(normalisePhone('917755971789'), '+917755971789');
 });
 
 test('rejects empty or excessive input', () => {
@@ -176,4 +177,56 @@ test('builds grounded lead briefs and property demand from WhatsApp data', () =>
   assert.equal(insights.trends.directPropertyInquiries, 1);
   assert.equal(insights.trends.properties[0].property.id, 'GGN-0004');
   assert.equal(insights.trends.sectors[0].label, 'Sector 107, Gurugram');
+});
+
+test('two broker agents keep the same buyer and different catalogues isolated', () => {
+  const sharedPhone = '+919999999999';
+  const brokerA = fresh();
+  brokerA.contacts = [
+    {
+      phone: sharedPhone,
+      name: 'Shared buyer in workspace A',
+      consent: 'inbound-only',
+      addedAt: '2026-10-28T09:00:00.000Z',
+    },
+  ];
+  brokerA.properties = [
+    {
+      ...brokerA.properties[0],
+      id: 'A-HOME-101',
+      location: 'Sector 57, Gurugram',
+      priceLakhs: 75,
+    },
+  ];
+
+  const brokerB = fresh();
+  brokerB.contacts = [
+    {
+      phone: sharedPhone,
+      name: 'Shared buyer in workspace B',
+      consent: 'inbound-only',
+      addedAt: '2026-10-28T09:00:00.000Z',
+    },
+  ];
+  brokerB.properties = [
+    {
+      ...brokerB.properties[0],
+      id: 'B-HOME-202',
+      location: 'Sector 62, Gurugram',
+      priceLakhs: 78,
+    },
+  ];
+
+  const message = 'I need a 2 BHK under 80 lakh';
+  const resultA = qualify(brokerA, message);
+  const resultB = qualify(brokerB, message);
+  const replyA = resultA.messages.at(-1)?.text || '';
+  const replyB = resultB.messages.at(-1)?.text || '';
+
+  assert.match(replyA, /A-HOME-101/);
+  assert.doesNotMatch(replyA, /B-HOME-202/);
+  assert.match(replyB, /B-HOME-202/);
+  assert.doesNotMatch(replyB, /A-HOME-101/);
+  assert.equal(resultA.requirements.budget, 80);
+  assert.deepEqual(brokerB.requirements, {});
 });

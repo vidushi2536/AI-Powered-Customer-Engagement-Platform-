@@ -29,20 +29,31 @@ cd C:\Users\bubblesk231\lawbstah\AI-Powered-Customer-Engagement-Platform\code\es
 npm run dev
 ```
 
-In another PowerShell window, keep the CRM/OpenClaw bridge running. Replace the
-phone with the owner workspace that controls the linked account:
+In another PowerShell window, keep the per-workspace WhatsApp bridge running:
 
 ```powershell
-cd C:\Users\bubblesk231\lawbstah\AI-Powered-Customer-Engagement-Platform
-node openclaw\scripts\sync-openclaw-crm.mjs +917755971789 --watch
+cd C:\Users\bubblesk231\lawbstah\AI-Powered-Customer-Engagement-Platform\openclaw\runtime
+node server.mjs
 ```
 
 Open `http://localhost:3000/`, sign in and complete onboarding. The sample
 Gurgaon catalog remains available until the manager replaces or extends it.
-The watcher checks for CRM and listing changes every second by default, so a
-successful CSV upload updates the WhatsApp allowlist and Estate Desk routes
-without a manual sync command. Set `ESTATE_DESK_SYNC_INTERVAL_MS` only when a
-different interval is required.
+The runtime provisions one OpenClaw account and agent per workspace. It updates
+the WhatsApp allowlist and verified property context from the workspace APIs.
+Agents do not store a model override: each one always inherits the gateway's
+current default model.
+
+## Recovery notes
+
+- Keep the bridge on port `18791` running whenever the website needs to link or
+  inspect WhatsApp. If it is stopped, restart `node server.mjs` and retry once.
+- A reconnect should show a QR within 10–30 seconds. A persistent closing
+  message is not normal.
+- For a terminal `401 conflict`, log out only the affected OpenClaw WhatsApp
+  account and request a fresh QR. CRM, listings and dashboard data stay intact.
+- If a reply mentions OpenRouter billing, run `openclaw agents list --json`.
+  Remove any Estate Desk agent `model` value so it inherits
+  `agents.defaults.model.primary` and the configured OpenAI OAuth route.
 
 ## Safety boundary
 

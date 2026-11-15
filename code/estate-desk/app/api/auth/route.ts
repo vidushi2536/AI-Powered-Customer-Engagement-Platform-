@@ -1,7 +1,6 @@
+import { cookieValue, createSession } from '@/lib/auth';
 import { database, hashToken, initial, runtime } from '@/lib/store';
 import { normalisePhone } from '@/lib/domain';
-
-const SESSION_DAYS = 30;
 
 function fail(message: string, status = 400) {
   return Response.json({ error: message }, { status });
@@ -18,22 +17,6 @@ function phoneFrom(value: unknown) {
   if (!/^\+\d{10,15}$/.test(phone))
     throw new Error('Enter a valid phone number with country code.');
   return phone;
-}
-
-function cookieValue(request: Request) {
-  return (request.headers.get('cookie') || '')
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith('estate_session='))
-    ?.slice('estate_session='.length);
-}
-
-function randomToken() {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes))
-    .replaceAll('+', '-')
-    .replaceAll('/', '_')
-    .replaceAll('=', '');
 }
 
 async function twilio(path: string, data: Record<string, string>) {
@@ -190,28 +173,16 @@ export async function POST(request: Request) {
       ]);
     }
 
-    const token = randomToken();
-    const expires = now + SESSION_DAYS * 86400000;
-    await db.batch([
-      db.prepare('DELETE FROM app_sessions WHERE expires<=?').bind(now),
-      db
-        .prepare(
-          'INSERT INTO app_sessions (token_hash,workspace_id,expires,created_at) VALUES (?,?,?,?)',
-        )
-        .bind(
-          await hashToken(token),
-          workspaceId,
-          expires,
-          new Date().toISOString(),
-        ),
-      db.prepare('DELETE FROM phone_challenges WHERE id=?').bind(challengeId),
-    ]);
-    const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
+    const sessionCookie = await createSession(request, workspaceId);
+    await db
+      .prepare('DELETE FROM phone_challenges WHERE id=?')
+      .bind(challengeId)
+      .run();
     return Response.json(
       { ok: true, onboardingComplete },
       {
         headers: {
-          'Set-Cookie': `estate_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}${secure}`,
+          'Set-Cookie': sessionCookie,
         },
       },
     );

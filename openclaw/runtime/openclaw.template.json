@@ -1,0 +1,112 @@
+{
+  "models": {
+    "providers": {
+      "ollama": {
+        "baseUrl": "http://host.docker.internal:11434",
+        "api": "ollama",
+        "apiKey": "ollama-local",
+        "models": [
+          {
+            "id": "llama3.1:8b",
+            "name": "Llama 3.1 8B local",
+            "reasoning": false,
+            "input": ["text"],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 32768,
+            "maxTokens": 2048,
+            "compat": {
+              "supportsTools": false,
+              "supportsUsageInStreaming": true
+            },
+            "params": {
+              "num_ctx": 32768
+            }
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "entries": {
+      "main": {
+        "workspace": "/home/node/.openclaw/workspaces/default"
+      }
+    },
+    "defaults": {
+      "workspace": "/home/node/.openclaw/workspaces/default",
+      "model": {
+        "primary": "openai/gpt-5.6-luna"
+      },
+      "heartbeat": {
+        "every": "0m",
+        "directPolicy": "block"
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "port": 18789,
+    "bind": "lan",
+    "auth": {
+      "mode": "token",
+      "token": "GENERATED_AT_FIRST_START"
+    },
+    "controlUi": {
+      "allowedOrigins": [
+        "http://127.0.0.1:18790"
+      ]
+    }
+  },
+  "session": {
+    "dmScope": "per-account-channel-peer"
+  },
+  "tools": {
+    "deny": [
+      "*"
+    ]
+  },
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "accounts": {}
+    },
+    "telegram": {
+      "enabled": false
+    }
+  },
+  "bindings": [],
+  "plugins": {
+    "entries": {
+      "whatsapp": {
+        "enabled": true
+      },
+      "telegram": {
+        "enabled": false
+      },
+      "estate-desk-guard": {
+        "enabled": true,
+        "hooks": {
+          "allowConversationAccess": true
+        }
+      },
+      "openrouter": {
+        "enabled": true
+      }
+    }
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "estate-desk-sync": {
+          "enabled": true
+        }
+      }
+    }
+  }
+}

@@ -47,6 +47,7 @@ export default async function estateDeskSync(event) {
         direction: event.action,
         channelId: context.channelId,
         accountId: context.accountId,
+        ownerPhone: process.env.OPENCLAW_OWNER_PHONE,
         contactPhone: contact,
         text,
         timestamp: new Date(timestamp).toISOString(),

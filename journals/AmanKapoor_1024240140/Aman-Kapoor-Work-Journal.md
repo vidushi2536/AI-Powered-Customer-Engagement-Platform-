@@ -4,7 +4,7 @@
 
 **Roll number:** 1024240140
 
-**Updated:** 14 September 2026
+**Updated:** 15 November 2026
 
 **Project:** AI-Powered Customer Engagement Platform
 
@@ -99,3 +99,44 @@ CRM integration, role-based team access and live inventory verification.
 - Added a bibliography and included the portable `tietreport.cls` file so the
   proposal source can be compiled outside the original Overleaf project.
 - Generated and visually checked the final 17-page proposal PDF.
+
+## Multi-user Estate Desk update — November 2026
+
+- Replaced shared login state with Google OAuth identities and isolated D1
+  workspaces for each user.
+- Added separate CRM contacts, listings, WhatsApp connection, conversation
+  history, agent context and meetings for every workspace.
+- Added per-workspace OpenClaw provisioning and QR-based personal WhatsApp
+  linking without simulated messages.
+- Added live clients, property intelligence and meetings screens with a lighter,
+  animated responsive interface.
+- Shortened client briefs to an at-a-glance chat summary and next action.
+- Strengthened catalog grounding so unmatched bedrooms and unknown property IDs
+  cannot be recommended or marked meeting-ready.
+- Added multi-tenant smoke tests proving that two users can share a buyer phone
+  without sharing CRM records, listings or messages.
+
+## Hiccups and solutions — November 2026
+
+### Website showed “WhatsApp is still closing the previous connection”
+
+The Docker gateway was healthy, but the separate Estate Desk bridge on port
+`18791` had stopped. The website therefore could not retrieve the QR. Restarting
+`openclaw/runtime/server.mjs` restored the website-to-gateway path. I also added
+clear offline and timeout messages, a safe reconnect retry, and documentation
+that a normal reconnect takes 10–30 seconds rather than several minutes.
+
+### WhatsApp session conflict during reconnect
+
+The old linked-device session returned a terminal `401 conflict`. I cleared only
+the affected OpenClaw WhatsApp credentials and generated a new QR. Workspace
+CRM, listings, conversations and agent files were preserved.
+
+### Unexpected billing error
+
+The gateway default was `openai/gpt-5.6-luna` with valid OpenAI OAuth, but older
+Estate Desk agents still had individual OpenRouter or Ollama model overrides.
+The OpenRouter alias had no credits and produced a 402 billing error. I removed
+all per-agent model overrides, verified a successful private OpenAI OAuth test,
+and changed provisioning so every current and future Estate Desk agent inherits
+the OpenClaw default model selected by the operator.

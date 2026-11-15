@@ -1,4 +1,5 @@
 import { database, identity, read, save, runtime } from '@/lib/store';
+import { openClawRuntime } from '@/lib/openclaw-runtime';
 import {
   brief,
   dashboardStats,
@@ -59,6 +60,9 @@ export async function POST(req: Request) {
     let contactsToSync: Contact[] | null = null;
     switch (body.action) {
       case 'onboarding': {
+        const ownerPhone = normalisePhone(textValue(body.ownerPhone));
+        if (!/^\+\d{10,15}$/.test(ownerPhone))
+          throw new Error('Enter your WhatsApp number with its country code.');
         if (body.consentConfirmed !== true)
           throw new Error(
             'Confirm that you are authorised to store these CRM contacts.',
@@ -71,6 +75,15 @@ export async function POST(req: Request) {
           throw new Error('Upload a CRM CSV containing 1–500 contacts.');
         const seen = new Set<string>();
         const now = new Date().toISOString();
+        const db = database();
+        const currentOwner = await db
+          .prepare('SELECT workspace_id FROM phone_owners WHERE phone=?')
+          .bind(ownerPhone)
+          .first<{ workspace_id: string }>();
+        if (currentOwner && currentOwner.workspace_id !== id)
+          throw new Error(
+            'This WhatsApp number is already connected to another workspace. Use a different number or sign in with the Google account that added it.',
+          );
         const contacts: Contact[] = body.contacts.map(
           (value: Record<string, unknown>, index: number) => {
             const phone = normalisePhone(textValue(value.phone));
@@ -158,9 +171,19 @@ export async function POST(req: Request) {
             },
         );
         state.crm = true;
-        state.onboardingComplete = true;
+        state.ownerPhone = ownerPhone;
+        state.phone = ownerPhone;
+        state.phoneMode = 'google';
+        state.whatsapp = {
+          accountId: 'unlinked',
+          senderPhone: ownerPhone,
+          lastEventAt: state.whatsapp?.lastEventAt || null,
+          connected: false,
+          provider: 'openclaw',
+          status: 'disconnected',
+        };
+        state.onboardingComplete = false;
         await save(id, state, revision);
-        const db = database();
         await db
           .prepare('DELETE FROM workspace_contacts WHERE workspace_id=?')
           .bind(id)
@@ -169,7 +192,7 @@ export async function POST(req: Request) {
           contacts.map((contact) =>
             db
               .prepare(
-                'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at WHERE workspace_contacts.workspace_id=excluded.workspace_id',
+                'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at',
               )
               .bind(
                 contact.phone,
@@ -218,28 +241,24 @@ export async function POST(req: Request) {
             };
           },
         );
-        const unique = new Map(incoming.map((contact) => [contact.phone, contact]));
+        const unique = new Map(
+          incoming.map((contact) => [contact.phone, contact]),
+        );
         const totalPhones = new Set([
           ...(state.contacts || []).map((contact) => contact.phone),
           ...unique.keys(),
         ]).size;
         if (totalPhones > 500)
           throw new Error('Maximum 500 CRM contacts per workspace.');
-        const db = database();
-        for (const contact of unique.values()) {
-          const existing = await db
-            .prepare('SELECT workspace_id FROM workspace_contacts WHERE phone=?')
-            .bind(contact.phone)
-            .first<{ workspace_id: string }>();
-          if (existing && existing.workspace_id !== id)
-            throw new Error(`${contact.phone} is already assigned to another workspace.`);
-        }
         const merged = new Map(
           (state.contacts || []).map((contact) => [contact.phone, contact]),
         );
-        for (const contact of unique.values()) merged.set(contact.phone, contact);
+        for (const contact of unique.values())
+          merged.set(contact.phone, contact);
         state.contacts = [...merged.values()];
-        const leads = new Map((state.leads || []).map((lead) => [lead.phone, lead]));
+        const leads = new Map(
+          (state.leads || []).map((lead) => [lead.phone, lead]),
+        );
         for (const contact of unique.values()) {
           const current = leads.get(contact.phone);
           if (current) {
@@ -279,19 +298,78 @@ export async function POST(req: Request) {
         state.note = body.note;
         break;
       case 'meeting': {
-        if (!state.interestedId || state.status === 'Opted out')
+        const lead = body.phone
+          ? (state.leads || []).find(
+              (item) => item.phone === normalisePhone(textValue(body.phone)),
+            )
+          : null;
+        const propertyId = textValue(
+          body.propertyId,
+          lead?.interestedId || state.interestedId || '',
+        );
+        const property = state.properties.find(
+          (item) => item.id === propertyId,
+        );
+        if (!property)
+          throw new Error(
+            'Choose a verified property from the current catalog.',
+          );
+        if ((lead?.status || state.status) === 'Opted out')
           throw new Error(
             'A buyer must express interest before proposing a viewing.',
           );
         const date = new Date(body.date);
         if (!Number.isFinite(date.getTime()) || date.getTime() < Date.now())
           throw new Error('Choose a future date and time');
-        state.meeting = {
-          propertyId: state.interestedId,
+        const meeting = {
+          propertyId: property.id,
           date: date.toISOString(),
           note: String(body.note || '').slice(0, 500),
+          status: 'proposed' as const,
+          updatedAt: new Date().toISOString(),
         };
-        state.status = 'Viewing proposed';
+        if (lead) {
+          lead.meeting = meeting;
+          lead.interestedId = property.id;
+          lead.status = 'Viewing proposed';
+          lead.updatedAt = meeting.updatedAt;
+        } else {
+          state.meeting = meeting;
+          state.interestedId = property.id;
+          state.status = 'Viewing proposed';
+        }
+        break;
+      }
+      case 'viewingStatus': {
+        const phone = normalisePhone(textValue(body.phone));
+        const lead = (state.leads || []).find((item) => item.phone === phone);
+        if (!lead?.meeting) throw new Error('Viewing not found.');
+        const status = textValue(body.status);
+        if (
+          !['proposed', 'confirmed', 'completed', 'reschedule-needed'].includes(
+            status,
+          )
+        )
+          throw new Error('Invalid viewing status.');
+        lead.meeting = {
+          ...lead.meeting,
+          status: status as
+            | 'proposed'
+            | 'confirmed'
+            | 'completed'
+            | 'reschedule-needed',
+          updatedAt: new Date().toISOString(),
+        };
+        lead.updatedAt = lead.meeting.updatedAt!;
+        break;
+      }
+      case 'assignLead': {
+        const phone = normalisePhone(textValue(body.phone));
+        const lead = (state.leads || []).find((item) => item.phone === phone);
+        if (!lead) throw new Error('Lead not found.');
+        const owner = textValue(body.owner).trim().slice(0, 80);
+        lead.owner = owner || null;
+        lead.updatedAt = new Date().toISOString();
         break;
       }
       case 'addProperties':
@@ -346,13 +424,37 @@ export async function POST(req: Request) {
         throw new Error('Action not allowed');
     }
     await save(id, next, revision);
+    if (
+      ['meeting', 'viewingStatus', 'assignLead', 'addProperties', 'upload'].includes(
+        String(body.action),
+      )
+    ) {
+      const connection = await database()
+        .prepare(
+          'SELECT runtime_account_id FROM whatsapp_connections WHERE workspace_id=? AND provider=?',
+        )
+        .bind(id, 'openclaw')
+        .first<{ runtime_account_id: string | null }>();
+      if (connection?.runtime_account_id) {
+        await openClawRuntime('/v1/context/sync', {
+          method: 'POST',
+          body: JSON.stringify({ accountId: connection.runtime_account_id }),
+          timeoutMs: 20_000,
+        }).catch((error) =>
+          console.warn(
+            'Estate Desk agent context refresh failed',
+            error instanceof Error ? error.message : 'unknown error',
+          ),
+        );
+      }
+    }
     if (contactsToSync) {
       const db = database();
       await db.batch(
         contactsToSync.map((contact) =>
           db
             .prepare(
-              'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at WHERE workspace_contacts.workspace_id=excluded.workspace_id',
+              'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at',
             )
             .bind(
               contact.phone,

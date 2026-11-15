@@ -126,6 +126,8 @@ celerybeat.pid
 
 # Environments
 .env
+account-secrets.json
+.dev.vars
 .venv
 env/
 venv/
@@ -142,6 +144,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
+code/estate-desk/artifacts/
 
 # mypy
 .mypy_cache/
@@ -465,4 +468,4 @@ TSWLatexianTemp*
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
- 
+

@@ -57,9 +57,24 @@ export type Lead = {
   requirements: Requirements;
   messages: Message[];
   interestedId: string | null;
-  meeting: { propertyId: string; date: string; note: string } | null;
+  meeting: Viewing | null;
+  owner?: string | null;
   blocked: number;
   updatedAt: string;
+};
+
+export type ViewingStatus =
+  | 'proposed'
+  | 'confirmed'
+  | 'completed'
+  | 'reschedule-needed';
+
+export type Viewing = {
+  propertyId: string;
+  date: string;
+  note: string;
+  status?: ViewingStatus;
+  updatedAt?: string;
 };
 
 export type Workspace = {
@@ -77,7 +92,7 @@ export type Workspace = {
   datasetVersion?: string;
   status: LeadStatus;
   interestedId: string | null;
-  meeting: { propertyId: string; date: string; note: string } | null;
+  meeting: Viewing | null;
   blocked: number;
   updatedAt: string;
   note: string;
@@ -86,6 +101,8 @@ export type Workspace = {
     senderPhone: string | null;
     lastEventAt: string | null;
     connected: boolean;
+    provider?: 'local' | 'meta' | 'openclaw';
+    status?: 'disconnected' | 'connected' | 'attention';
   };
 };
 
@@ -138,6 +155,7 @@ export type WorkspaceInsights = {
 export function normalisePhone(phone: string) {
   let value = phone.replace(/[\s()-]/g, '');
   if (/^\d{10}$/.test(value)) value = '+91' + value;
+  else if (/^\d{11,15}$/.test(value)) value = '+' + value;
   return value;
 }
 
@@ -289,6 +307,8 @@ export function qualify(state: Workspace, message: string): Workspace {
       propertyId: next.interestedId,
       date: requestedTime,
       note: 'Buyer requested a physical viewing; a human advisor must confirm it.',
+      status: 'proposed',
+      updatedAt: at,
     };
     return reply(
       `Your requested physical viewing for ${next.interestedId} is noted for ${requestedTime}. A human advisor will verify availability and confirm the appointment.`,
@@ -419,10 +439,12 @@ export function ingestWhatsApp(
   next.meeting = lead.meeting;
   next.blocked = lead.blocked;
   next.whatsapp = {
-    accountId: 'shellsworth',
-    senderPhone: contactPhone,
+    accountId: next.whatsapp?.accountId || 'unlinked',
+    senderPhone: next.ownerPhone || next.whatsapp?.senderPhone || null,
     lastEventAt: event.at,
     connected: true,
+    provider: next.whatsapp?.provider || 'openclaw',
+    status: 'connected',
   };
   next.updatedAt = event.at;
   return next;

@@ -6,8 +6,9 @@ This directory contains only the secret-free parts of the WhatsApp integration:
 - `hooks/estate-desk-sync/`: signs and mirrors successful WhatsApp events;
 - `plugins/estate-desk-policy/`: blocks unsafe destinations and out-of-scope
   input/output;
-- `scripts/sync-openclaw-crm.mjs`: watches a manager workspace and updates the
-  WhatsApp contact allowlist, peer routes and property context.
+- `runtime/`: provisions one WhatsApp account and agent per Estate Desk
+  workspace, synchronizes verified context and serves the QR/status bridge;
+- `scripts/sync-openclaw-crm.mjs`: preserved legacy single-workspace watcher.
 
 The live OpenClaw configuration, WhatsApp link state, account tokens, personal
 numbers and webhook secret are not committed. The runtime needs:
@@ -17,11 +18,19 @@ ESTATE_DESK_SYNC_URL=http://host.docker.internal:3000/api/whatsapp/events
 ESTATE_DESK_SYNC_SECRET=replace-with-a-long-random-secret
 ```
 
-Use the same secret in `code/estate-desk/.dev.vars`. Register the
-`estate-desk` agent, mount the workspace/hook/policy, and run the CRM watcher for
-the correct owner phone. It builds peer-specific WhatsApp routes from the
-authorized CRM instead of relying on a hard-coded public number. Keep Telegram
-on its own account and agent binding so both channels can run at the same time.
+Use the same secret in `code/estate-desk/.dev.vars`. Start
+`openclaw/runtime/server.mjs` and keep it running with the Docker gateway. The
+runtime builds an account-specific allowlist and grounded property context for
+each workspace instead of relying on a hard-coded public number. It creates
+agents without a model override so they always inherit the gateway default.
+Keep Telegram on its own account and agent binding so both channels can run at
+the same time.
+
+If the website repeatedly says WhatsApp is closing its previous connection,
+first verify that the runtime bridge is listening on port `18791`. If an agent
+reports OpenRouter billing while OpenAI OAuth is configured, inspect the agent
+list and remove its stale `model` field; OpenRouter credits and OpenAI OAuth are
+separate authentication routes.
 
 See [`code/estate-desk/OPENCLAW-SETUP.md`](../code/estate-desk/OPENCLAW-SETUP.md)
 for the complete event path. OpenClaw command names can change between releases,

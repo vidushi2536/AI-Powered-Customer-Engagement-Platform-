@@ -51,10 +51,12 @@ export function initial(): Workspace {
     updatedAt: new Date().toISOString(),
     note: '',
     whatsapp: {
-      accountId: 'shellsworth',
+      accountId: 'unlinked',
       senderPhone: null,
       lastEventAt: null,
       connected: false,
+      provider: 'openclaw',
+      status: 'disconnected',
     },
   };
 }
@@ -77,27 +79,33 @@ function hydrate(value: Workspace): Workspace {
           },
         ]
       : [];
-  const leads: Lead[] = (Array.isArray(value.leads)
-    ? value.leads
-    : legacyPhone
-      ? [
-          {
-            phone: legacyPhone,
-            name: contacts[0]?.name || 'Imported contact',
-            status: value.status,
-            requirements: value.requirements || {},
-            messages: Array.isArray(value.messages) ? value.messages : [],
-            interestedId: value.interestedId,
-            meeting: value.meeting,
-            blocked: value.blocked || 0,
-            updatedAt: value.updatedAt,
-          },
-        ]
-      : []
+  const leads: Lead[] = (
+    Array.isArray(value.leads)
+      ? value.leads
+      : legacyPhone
+        ? [
+            {
+              phone: legacyPhone,
+              name: contacts[0]?.name || 'Imported contact',
+              status: value.status,
+              requirements: value.requirements || {},
+              messages: Array.isArray(value.messages) ? value.messages : [],
+              interestedId: value.interestedId,
+              meeting: value.meeting,
+              blocked: value.blocked || 0,
+              updatedAt: value.updatedAt,
+            },
+          ]
+        : []
   ).map((lead) =>
     lead.meeting && lead.status !== 'Opted out'
-      ? { ...lead, status: 'Viewing proposed' }
-      : lead,
+      ? {
+          ...lead,
+          owner: lead.owner || null,
+          meeting: { status: 'proposed', ...lead.meeting },
+          status: 'Viewing proposed',
+        }
+      : { ...lead, owner: lead.owner || null },
   );
   return {
     ...base,
