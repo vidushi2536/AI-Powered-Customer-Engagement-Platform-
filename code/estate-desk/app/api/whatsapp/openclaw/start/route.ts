@@ -96,6 +96,19 @@ export async function POST() {
         body: JSON.stringify({ accountId: provisioned.accountId }),
       });
     }
+    const live = await openClawRuntime<{ connected?: boolean }>(
+      `/v1/whatsapp/status?accountId=${encodeURIComponent(provisioned.accountId)}`,
+      { timeoutMs: 20_000 },
+    ).catch(() => null);
+    if (live?.connected) {
+      await db
+        .prepare(
+          'UPDATE whatsapp_connections SET status=?, updated_at=? WHERE workspace_id=?',
+        )
+        .bind('connected', new Date().toISOString(), workspaceId)
+        .run();
+      return Response.json({ connected: true, ...provisioned });
+    }
     // Context sync finalises the CRM allowlist and restarts the WhatsApp
     // channel. Start login only after that restart so the displayed QR cannot
     // be invalidated by a late configuration reload.
@@ -110,7 +123,11 @@ export async function POST() {
     }
     return Response.json({ ...login, ...provisioned });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Could not start WhatsApp linking.';
+    const raw =
+      error instanceof Error ? error.message : 'Could not start WhatsApp linking.';
+    const message = /internal error|reference\s*=/i.test(raw)
+      ? 'WhatsApp could not prepare the connection. Wait a few seconds and try once more.'
+      : raw;
     return Response.json(
       { error: message },
       { status: message === 'UNAUTHORIZED' ? 401 : 400 },

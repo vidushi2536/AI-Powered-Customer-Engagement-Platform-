@@ -643,6 +643,9 @@ export default function WorkspaceApp({ section }: { section: Section }) {
       if (!startResponse.ok)
         throw new Error(start.error || 'Could not start WhatsApp linking.');
       if (start.connected) {
+        // The status endpoint verifies the linked phone and marks onboarding
+        // complete when an existing WhatsApp session is reused.
+        await fetch('/api/whatsapp/openclaw/status', { cache: 'no-store' });
         window.location.assign('/dashboard');
         return;
       }
