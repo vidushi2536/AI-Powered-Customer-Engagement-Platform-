@@ -4,139 +4,187 @@
 
 **Roll number:** 1024240140
 
-**Updated:** 15 November 2026
+**Group:** 3X11
+
+**Course:** UCS503 — Software Engineering
 
 **Project:** AI-Powered Customer Engagement Platform
 
-## My contribution
+**Updated:** 16 November 2026
 
-I changed the earlier prototype into a complete WhatsApp-first real-estate
-manager application. Buyers continue to speak on WhatsApp. The website now
-starts with phone login, collects CRM and property data, and then opens a live
-dashboard. The final goal of the agent is to understand the buyer and help the
-manager arrange a physical visit to one or more suitable properties.
+## Project objective
 
-## Work completed
+My goal was to build a WhatsApp-first real-estate outreach system. Buyers should
+talk naturally to an AI employee on WhatsApp, while the property manager uses a
+website to understand leads, property demand and physical-meeting readiness.
+The agent must only perform real-estate work, use verified listings and keep the
+data of different users completely separate.
 
-### Login and onboarding
+## Chronological development record
 
-- Built a new landing page with phone-number sign-up and login.
-- Added OTP verification with optional Twilio Verify and a labelled demo mode.
-- Made CRM and property-file onboarding compulsory before dashboard access.
-- Added CSV templates, validation and clear consent confirmation.
+### Phase 1 — Idea, scope and first prototype
 
-### Manager dashboards
+- Defined Estate Desk as a property-sales assistant instead of a general chatbot.
+- Decided that buyer conversations would happen on WhatsApp, not on the website.
+- Set the agent's main objective: collect buyer requirements, recommend suitable
+  verified properties and identify interest in a physical visit.
+- Created the first manager dashboard for conversations, leads and basic agent
+  insights.
+- Added the initial OpenClaw real-estate personality and kept it separate from
+  the existing Telegram agent.
 
-- Rebuilt the Overview page around useful lead and message statistics.
-- Added form and CSV options for adding new clients and properties.
-- Built a Meetings dashboard that lists meeting-ready buyers, contact details,
-  budget, bedroom choice, location, timeline and the exact properties to show.
-- Built a Trends dashboard showing the locations, property types and listings
-  mentioned most often in buyer conversations.
+### Phase 2 — Property and CRM data
+
+- Added CSV onboarding for CRM phone numbers and property listings.
+- Imported the historical Gurgaon real-estate dataset containing 3,909 rows.
+- Produced a normalized 120-property sample catalog for fast demonstrations.
+- Added downloadable CRM and property templates.
+- Added form-based options so users can add an individual client or property
+  without preparing a CSV.
+- Made `inbound-only` the default contact state so importing a number does not
+  permit cold messaging.
+
+### Phase 3 — Real WhatsApp and OpenClaw integration
+
+- Linked a real personal WhatsApp account through OpenClaw's QR flow.
+- Created an Estate Desk route and workspace separate from other OpenClaw agents.
+- Added an allowlist so only authorized CRM contacts can receive replies.
+- Added STOP/START handling and blocked unknown or opted-out contacts.
+- Built a signed event hook to copy permitted inbound and outbound WhatsApp text
+  into the Estate Desk application.
+- Added deduplication so retried WhatsApp events do not create duplicate records.
+
+### Phase 4 — Live lead intelligence
+
+- Added server-sent events so dashboards update while conversations are happening.
+- Extracted budget, bedrooms, preferred location, timeline and visit interest
+  from the conversation history.
+- Built lead qualification, next-action suggestions and property matching.
 - Added downloadable CSV reports containing buyer details, agent analysis,
-  meeting readiness, property matches and permitted chat data.
+  meeting readiness, property matches and permitted chat information.
+- Created live property-demand insights based on WhatsApp inquiries and the
+  verified listing database.
 
-### Real-time WhatsApp data
+### Phase 5 — Meetings and manager workflow
 
-- Added signed inbound and outbound WhatsApp event ingestion.
-- Added deduplication so a retried webhook does not create repeated messages.
-- Added a server-sent event stream so every dashboard refreshes while a buyer
-  conversation is happening, without manually reloading the page.
-- Added a CRM watcher that updates OpenClaw contact routes and property context
-  when the manager changes the workspace data.
+- Added a Meetings page for proposed, confirmed, rescheduled and completed visits.
+- Added buyer-ready-for-physical-meeting states with the buyer's contact details.
+- Added the exact properties, requirements and next steps needed before a visit.
+- Kept final price, availability, legal details and meeting confirmation under
+  human control.
+- Simplified client briefs to two sections: chat summary and next steps.
 
-### Agent behavior and safety
+### Phase 6 — Interface redesign
 
-- Kept the Estate Desk personality separate from the Telegram personality.
-- Restricted it to property requirements, catalog recommendations and physical
-  visit interest.
-- Added separate input and output policy checks for suspicious or unrelated
-  prompts.
-- Kept unknown contacts blocked, made `inbound-only` the default, and applied
-  STOP/START consent handling.
-- Kept price, availability, legal facts and meeting confirmation under human
-  control.
+- Reworked the layout into Today, Leads & clients, Properties & insights, and
+  Meetings.
+- Moved client and property creation to their relevant pages instead of the home
+  screen.
+- Combined property information and demand insights into one focused experience.
+- Added a light peach-and-orange visual system, improved typography, animated
+  navigation and responsive layouts.
+- Added larger mobile controls, visible focus states, empty states, saved lead
+  filters and clearer status labels.
+- Removed repeated viewing actions and screens that made the workflow confusing.
 
-### Data, storage and testing
+### Phase 7 — Grounding and safety improvements
 
-- Imported the historical Gurgaon real-estate dataset with 3,909 rows and made
-  it downloadable for testing.
-- Kept a normalized 120-property sample catalog for fast matching.
-- Extended the Cloudflare D1 schema for phone workspaces, multiple contacts,
-  conversation events and live state revisions.
-- Added eleven domain tests and API smoke coverage for authentication,
-  onboarding, uploads, WhatsApp events, consent, matching and page routes.
-- Removed the unused old login, single-contact phone API and old dashboard
-  component so the repository contains only the current application path.
+- Restricted the agent to real-estate discovery, property requirements and
+  physical-visit interest.
+- Added checks for jailbreaks, instruction extraction and unrelated tasks.
+- Prevented the agent from inventing properties, prices, bedrooms, amenities,
+  availability or meetings.
+- Required every recommendation to match a property ID in the active workspace
+  catalog.
+- Fixed cases where a 3 BHK could appear in a 5 BHK request or an unavailable
+  6 BHK could be invented.
+- Updated the response style so the agent sounds like a natural employee and
+  returns only the customer-facing message without exposing its reasoning.
 
-## Problems and solutions
+### Phase 8 — Authentication and multiple users
 
-The biggest problem was joining a local WhatsApp gateway with a browser
-dashboard. I used a signed webhook for message events and a local watcher for
-CRM configuration. Another problem was stale dashboard data. I added a live
-event stream and revision checks so close updates do not silently overwrite one
-another. I also separated the OpenClaw agent from the main Telegram identity so
-both can run at the same time.
+- Replaced the shared phone-login prototype with Google OAuth.
+- Added OAuth identities and isolated Cloudflare D1 workspaces.
+- Separated each user's CRM, listings, messages, agent context, meetings and
+  WhatsApp connection.
+- Added composite workspace keys so the same buyer phone can exist in two CRMs
+  without data leakage.
+- Added multi-tenant tests proving that one user cannot access another user's
+  contacts, listings or conversation history.
 
-## Result
+### Phase 9 — Per-workspace agents and plug-and-play setup
 
-The current version is a working vertical slice. An authorized buyer sends a
-WhatsApp message, the real-estate agent gathers needs and suggests catalog
-properties, and the manager sees the result live. The manager can identify who
-is ready for a physical meeting, what to show them and what action to take next.
-The remaining production work is a hosted per-owner WhatsApp connector, a real
-CRM integration, role-based team access and live inventory verification.
+- Built a local authenticated Estate Desk runtime on port `18791`.
+- Added website-controlled OpenClaw account and agent provisioning for each
+  workspace.
+- Added QR start, wait and status endpoints so WhatsApp can be linked during
+  onboarding.
+- Added live context synchronization for CRM allowlists, verified properties and
+  meeting schedules.
+- Changed provisioning so Estate Desk agents never store their own model choice.
+  Every agent now inherits the operator's OpenClaw default model.
 
-## Project proposal update
+### Phase 10 — Testing, documentation and proposal
 
-- Rebuilt the project proposal in the official TIET `tietreport` format.
-- Added the correct student names, roll numbers, Group 3X11, third-year status
-  and UCS503 Software Engineering course details.
-- Added four different flow diagrams covering the user journey, system
-  architecture, live WhatsApp event pipeline and physical-meeting decision flow.
-- Spread the diagrams across the proposal so that no two diagrams appear one
-  after another.
-- Added a bibliography and included the portable `tietreport.cls` file so the
-  proposal source can be compiled outside the original Overleaf project.
-- Generated and visually checked the final 17-page proposal PDF.
+- Expanded the domain suite to 13 tests covering matching, qualification,
+  consent, prompt rejection, grounding, WhatsApp ingestion and isolation.
+- Added API smoke tests for authentication, onboarding, uploads, events, live
+  streams, forms, STOP/START and blocked obsolete routes.
+- Added a two-user smoke test for CRM, listing and conversation isolation.
+- Added responsive meeting and property-table render tests.
+- Rebuilt the proposal using the official TIET `tietreport` format.
+- Added Aman Kapoor (1024240140), Vidushi Jain (1024240020), Group 3X11 and the
+  UCS503 Software Engineering course information.
+- Added four spread-out flow diagrams and generated the final proposal PDF.
 
-## Multi-user Estate Desk update — November 2026
+## Important problems and solutions
 
-- Replaced shared login state with Google OAuth identities and isolated D1
-  workspaces for each user.
-- Added separate CRM contacts, listings, WhatsApp connection, conversation
-  history, agent context and meetings for every workspace.
-- Added per-workspace OpenClaw provisioning and QR-based personal WhatsApp
-  linking without simulated messages.
-- Added live clients, property intelligence and meetings screens with a lighter,
-  animated responsive interface.
-- Shortened client briefs to an at-a-glance chat summary and next action.
-- Strengthened catalog grounding so unmatched bedrooms and unknown property IDs
-  cannot be recommended or marked meeting-ready.
-- Added multi-tenant smoke tests proving that two users can share a buyer phone
-  without sharing CRM records, listings or messages.
+### WhatsApp QR failed with an internal reference
 
-## Hiccups and solutions — November 2026
+OpenClaw briefly rejected a new QR while closing an old socket. I added a safe
+retry and replaced the technical reference with a useful message.
 
-### Website showed “WhatsApp is still closing the previous connection”
+### “WhatsApp is still closing the previous connection” never finished
 
-The Docker gateway was healthy, but the separate Estate Desk bridge on port
-`18791` had stopped. The website therefore could not retrieve the QR. Restarting
-`openclaw/runtime/server.mjs` restored the website-to-gateway path. I also added
-clear offline and timeout messages, a safe reconnect retry, and documentation
-that a normal reconnect takes 10–30 seconds rather than several minutes.
+The website and Docker gateway were running, but the separate bridge on port
+`18791` had stopped. Restarting `openclaw/runtime/server.mjs` restored QR access.
+I added an explicit bridge-offline error and documented that a normal reconnect
+should take only 10–30 seconds.
 
-### WhatsApp session conflict during reconnect
+### WhatsApp returned a 401 conflict
 
-The old linked-device session returned a terminal `401 conflict`. I cleared only
-the affected OpenClaw WhatsApp credentials and generated a new QR. Workspace
-CRM, listings, conversations and agent files were preserved.
+The old linked-device session had become terminal. I cleared only that account's
+stale WhatsApp credentials and generated a fresh QR. CRM, listings, messages and
+agent files were preserved.
 
-### Unexpected billing error
+### Agent reported an unexpected billing error
 
-The gateway default was `openai/gpt-5.6-luna` with valid OpenAI OAuth, but older
-Estate Desk agents still had individual OpenRouter or Ollama model overrides.
-The OpenRouter alias had no credits and produced a 402 billing error. I removed
-all per-agent model overrides, verified a successful private OpenAI OAuth test,
-and changed provisioning so every current and future Estate Desk agent inherits
-the OpenClaw default model selected by the operator.
+The OpenClaw default used valid OpenAI OAuth, but older Estate Desk agents had
+individual OpenRouter or Ollama overrides. The OpenRouter account had no credits
+and returned a 402 error. I removed every per-agent model override, tested the
+OpenAI OAuth route successfully and changed future provisioning to inherit the
+gateway default automatically.
+
+### Dashboard did not update from WhatsApp
+
+The gateway initially had no valid dashboard sync target. I connected the signed
+event path, added a live workspace stream and verified updates using synthetic
+events before testing real messages.
+
+## Current result
+
+Estate Desk now supports multiple users with isolated data and separate agents.
+An authorized buyer messages a user's WhatsApp number, the grounded agent learns
+their needs and recommends only verified catalog properties, and the website
+updates lead, demand and meeting information in real time. The manager can see
+who needs follow-up, who is ready for a physical visit and what properties to
+show, without reading every message manually.
+
+## Remaining production work
+
+- Move the long-running WhatsApp runtime from the pilot laptop to an always-on
+  cloud service.
+- Replace personal WhatsApp Web linking with Meta Embedded Signup when a
+  WhatsApp Business account is available.
+- Add role-based teams, production CRM connectors, backups and monitoring.
+- Replace historical sample listings with verified live inventory feeds.
