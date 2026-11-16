@@ -30,6 +30,13 @@ Course: **UCS503 — Software Engineering Project, TIET Patiala (2026–27 Odd)*
   confirmation of prices, availability and physical meetings.
 - Per-workspace OpenClaw agents and WhatsApp accounts with isolated CRM,
   listing, conversation and meeting context.
+- Adding a client immediately refreshes that workspace's OpenClaw allowlist;
+  contacts remain inbound-only until they message first or explicitly opt in.
+- The Overview control can disable one workspace agent at the channel level,
+  stopping OpenClaw from receiving or sending its WhatsApp messages until the
+  agent is enabled again.
+- Client records can be disabled without losing history, or permanently deleted
+  with their stored conversation history; both actions refresh the allowlist.
 - Model inheritance: Estate Desk agents always use the OpenClaw gateway's
   current default model instead of storing their own provider override.
 

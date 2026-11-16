@@ -58,6 +58,7 @@ export async function POST(req: Request) {
     const { state, revision } = await read(id);
     const next = state;
     let contactsToSync: Contact[] | null = null;
+    let deletedContactPhone: string | null = null;
     switch (body.action) {
       case 'onboarding': {
         const ownerPhone = normalisePhone(textValue(body.ownerPhone));
@@ -287,6 +288,37 @@ export async function POST(req: Request) {
           throw new Error('Invalid agent state');
         state.agentEnabled = body.enabled;
         break;
+      case 'contactState': {
+        const phone = normalisePhone(textValue(body.phone));
+        if (typeof body.enabled !== 'boolean')
+          throw new Error('Invalid contact state');
+        const contact = (state.contacts || []).find(
+          (item) => item.phone === phone,
+        );
+        if (!contact) throw new Error('Contact not found');
+        contact.consent = body.enabled ? 'inbound-only' : 'opted-out';
+        const lead = (state.leads || []).find((item) => item.phone === phone);
+        if (lead) {
+          if (!body.enabled) lead.status = 'Opted out';
+          else if (lead.status === 'Opted out') lead.status = 'New';
+          lead.updatedAt = new Date().toISOString();
+        }
+        contactsToSync = [contact];
+        break;
+      }
+      case 'deleteContact': {
+        const phone = normalisePhone(textValue(body.phone));
+        if (!(state.contacts || []).some((item) => item.phone === phone))
+          throw new Error('Contact not found');
+        state.contacts = (state.contacts || []).filter(
+          (item) => item.phone !== phone,
+        );
+        state.leads = (state.leads || []).filter(
+          (item) => item.phone !== phone,
+        );
+        deletedContactPhone = phone;
+        break;
+      }
       case 'crm':
         if (typeof body.connected !== 'boolean')
           throw new Error('Invalid CRM state');
@@ -424,9 +456,45 @@ export async function POST(req: Request) {
         throw new Error('Action not allowed');
     }
     await save(id, next, revision);
+    if (contactsToSync) {
+      const db = database();
+      await db.batch(
+        contactsToSync.map((contact) =>
+          db
+            .prepare(
+              'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at',
+            )
+            .bind(
+              contact.phone,
+              id,
+              contact.name,
+              contact.consent,
+              contact.addedAt,
+            ),
+        ),
+      );
+    }
+    if (deletedContactPhone) {
+      const db = database();
+      await db.batch([
+        db
+          .prepare(
+            'DELETE FROM workspace_contacts WHERE workspace_id=? AND phone=?',
+          )
+          .bind(id, deletedContactPhone),
+        db
+          .prepare(
+            'DELETE FROM whatsapp_events WHERE workspace_id=? AND contact_phone=?',
+          )
+          .bind(id, deletedContactPhone),
+      ]);
+    }
     if (
       [
         'addContacts',
+        'agent',
+        'contactState',
+        'deleteContact',
         'meeting',
         'viewingStatus',
         'assignLead',
@@ -452,24 +520,6 @@ export async function POST(req: Request) {
           ),
         );
       }
-    }
-    if (contactsToSync) {
-      const db = database();
-      await db.batch(
-        contactsToSync.map((contact) =>
-          db
-            .prepare(
-              'INSERT INTO workspace_contacts (phone,workspace_id,name,consent,created_at) VALUES (?,?,?,?,?) ON CONFLICT(workspace_id,phone) DO UPDATE SET name=excluded.name,consent=excluded.consent,created_at=excluded.created_at',
-            )
-            .bind(
-              contact.phone,
-              id,
-              contact.name,
-              contact.consent,
-              contact.addedAt,
-            ),
-        ),
-      );
     }
     return Response.json({
       state: next,

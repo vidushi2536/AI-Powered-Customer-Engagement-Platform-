@@ -36,7 +36,10 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   UploadCloud,
+  UserCheck,
+  UserX,
   UserPlus,
   Users,
 } from 'lucide-react';
@@ -1038,6 +1041,8 @@ export default function WorkspaceApp({ section }: { section: Section }) {
         <Overview
           state={state}
           insights={insights}
+          post={post}
+          busy={busy}
         />
       )}
       {section === 'clients' && (
@@ -1369,9 +1374,13 @@ export default function WorkspaceApp({ section }: { section: Section }) {
 function Overview({
   state,
   insights,
+  post,
+  busy,
 }: {
   state: Workspace;
   insights: WorkspaceInsights | null;
+  post: (body: object, success: string) => Promise<boolean>;
+  busy: boolean;
 }) {
   const readyLeads = (insights?.leads || []).filter((lead) =>
     ['Follow up', 'Viewing proposed'].includes(lead.status),
@@ -1407,13 +1416,36 @@ function Overview({
               : "Connect your WhatsApp agent to find leads from conversations."}
           </span>
         </div>
-        <Link className="secondary-action connection-action" href="/onboarding">
-          <span>
-            <strong>{state.whatsapp?.connected ? 'Manage WhatsApp' : 'Connect WhatsApp'}</strong>
-            <small>{state.whatsapp?.connected ? 'Settings and agent status' : 'Link your number securely'}</small>
-          </span>
-          <ArrowRight />
-        </Link>
+        <div className="agent-connection-actions">
+          {state.whatsapp?.connected && (
+            <button
+              className={`agent-toggle ${state.agentEnabled ? 'agent-toggle-disable' : 'agent-toggle-enable'}`}
+              type="button"
+              disabled={busy}
+              onClick={() =>
+                void post(
+                  { action: 'agent', enabled: !state.agentEnabled },
+                  state.agentEnabled
+                    ? 'Agent disabled. It can no longer read or send WhatsApp messages.'
+                    : 'Agent enabled. WhatsApp replies are active again.',
+                )
+              }
+            >
+              {busy
+                ? 'Updating…'
+                : state.agentEnabled
+                  ? 'Disable agent'
+                  : 'Enable agent'}
+            </button>
+          )}
+          <Link className="secondary-action connection-action" href="/onboarding">
+            <span>
+              <strong>{state.whatsapp?.connected ? 'Manage WhatsApp' : 'Connect WhatsApp'}</strong>
+              <small>{state.whatsapp?.connected ? 'Settings and agent status' : 'Link your number securely'}</small>
+            </span>
+            <ArrowRight />
+          </Link>
+        </div>
       </section>
       <section
         className={
@@ -1562,6 +1594,7 @@ function LeadsDashboard({
   const [propertyId, setPropertyId] = useState('');
   const [date, setDate] = useState('');
   const [note, setNote] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const filteredLeads = leads.filter((lead) =>
     filter === 'all'
       ? true
@@ -1680,14 +1713,77 @@ function LeadsDashboard({
               <h2>{selected.name}</h2>
               <a href={`tel:${selected.phone}`}>{selected.phone}</a>
             </div>
-            <button
-              className="export-button"
-              disabled={!insights}
-              onClick={() => insights && downloadLeadData(state, insights)}
-            >
-              <Download /> Download client data
-            </button>
+            <div className="client-record-actions">
+              <button
+                className={`contact-state-action ${selected.status === 'Opted out' ? 'contact-enable-action' : ''}`}
+                onClick={() =>
+                  void post(
+                    {
+                      action: 'contactState',
+                      phone: selected.phone,
+                      enabled: selected.status === 'Opted out',
+                    },
+                    selected.status === 'Opted out'
+                      ? `${selected.name} can message the agent again.`
+                      : `${selected.name} has been disabled and removed from the agent allowlist.`,
+                  )
+                }
+              >
+                {selected.status === 'Opted out' ? <UserCheck /> : <UserX />}
+                {selected.status === 'Opted out'
+                  ? 'Enable contact'
+                  : 'Disable contact'}
+              </button>
+              <button
+                className="delete-contact-action"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 /> Delete contact
+              </button>
+              <button
+                className="export-button"
+                disabled={!insights}
+                onClick={() => insights && downloadLeadData(state, insights)}
+              >
+                <Download /> Download client data
+              </button>
+            </div>
           </header>
+          {confirmDelete && (
+            <div className="delete-contact-confirmation" role="alert">
+              <div>
+                <strong>Delete {selected.name}?</strong>
+                <span>
+                  This removes the contact, lead record and stored conversation
+                  history from this workspace.
+                </span>
+              </div>
+              <div>
+                <button
+                  className="quiet-button"
+                  onClick={() => setConfirmDelete(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="confirm-delete-action"
+                  onClick={async () => {
+                    const removed = await post(
+                      { action: 'deleteContact', phone: selected.phone },
+                      `${selected.name} was deleted and removed from the agent allowlist.`,
+                    );
+                    if (removed) {
+                      setConfirmDelete(false);
+                      select('');
+                      setQuery('');
+                    }
+                  }}
+                >
+                  Delete permanently
+                </button>
+              </div>
+            </div>
+          )}
           <div className="selected-client-summary">
             <article>
               <p className="eyebrow">Chat summary</p>

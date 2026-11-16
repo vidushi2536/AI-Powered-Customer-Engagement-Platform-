@@ -137,6 +137,19 @@ data of different users completely separate.
   UCS503 Software Engineering course information.
 - Added four spread-out flow diagrams and generated the final proposal PDF.
 
+### Phase 11 — Live contact and agent controls
+
+- Fixed the Add client flow so every new CRM contact immediately refreshes the
+  correct workspace agent's WhatsApp allowlist.
+- Added a workspace-level Disable agent control that stops its OpenClaw channel
+  from receiving or sending messages, with a safe Enable agent action to resume.
+- Added per-client Disable and Enable controls so one contact can be removed
+  from or restored to the allowlist without losing their history.
+- Added a confirmed Delete contact action that removes the CRM record, lead,
+  meeting data and stored conversation events, then refreshes the allowlist.
+- Revalidated the production build, 13 domain tests and the live local runtime
+  after the changes.
+
 ## Important problems and solutions
 
 ### WhatsApp QR failed with an internal reference

@@ -266,7 +266,7 @@ async function syncContext(accountId) {
     'set',
     `channels.whatsapp.accounts.${accountId}`,
     JSON.stringify({
-      enabled: true,
+      enabled: context.agentEnabled !== false,
       dmPolicy: 'allowlist',
       allowFrom,
       groupPolicy: 'disabled',

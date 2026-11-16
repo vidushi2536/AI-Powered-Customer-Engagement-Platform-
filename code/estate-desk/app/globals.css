@@ -1886,6 +1886,55 @@ label.field {
 .page-action-bar svg {
   width: 17px;
 }
+.agent-connection-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  color: inherit;
+}
+.agent-toggle {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.agent-toggle:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.agent-toggle:focus-visible {
+  outline: 3px solid #f3a18080;
+  outline-offset: 2px;
+}
+.agent-toggle:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.agent-toggle-disable {
+  border-color: #d9a58f;
+  background: #fff9f5;
+  color: #8c351d;
+  box-shadow: 0 0.35rem 0.9rem #8c351d14;
+}
+.agent-toggle-disable:hover:not(:disabled) {
+  background: #ffe7dc;
+  box-shadow: 0 0.5rem 1.1rem #8c351d24;
+}
+.agent-toggle-enable {
+  background: #337451;
+  color: #fff;
+  box-shadow: 0 0.45rem 1rem #3374512b;
+}
+.agent-toggle-enable:hover:not(:disabled) {
+  background: #286343;
+  box-shadow: 0 0.55rem 1.2rem #3374513d;
+}
 .page-action-bar .primary-action {
   min-height: 44px;
   display: inline-flex;
@@ -2202,6 +2251,81 @@ label.field {
 .compact-client-header a {
   color: #a33e24;
   font-size: 0.82rem;
+}
+.client-record-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+.contact-state-action,
+.delete-contact-action,
+.confirm-delete-action {
+  min-height: 44px;
+  padding: 0.68rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid #deb49f;
+  border-radius: 999px;
+  background: #fff6f0;
+  color: #7f321d;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+.contact-state-action svg,
+.delete-contact-action svg {
+  width: 16px;
+}
+.contact-state-action:hover,
+.delete-contact-action:hover,
+.confirm-delete-action:hover {
+  transform: translateY(-1px);
+  background: #ffe5d8;
+  box-shadow: 0 0.45rem 1rem #8c351d1c;
+}
+.contact-enable-action {
+  border-color: #a9ceb5;
+  background: #edf8f0;
+  color: #286343;
+}
+.contact-enable-action:hover {
+  background: #ddf1e3;
+}
+.delete-contact-confirmation {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #e4a48e;
+  border-radius: 0.7rem;
+  background: #fff0e9;
+}
+.delete-contact-confirmation > div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.delete-contact-confirmation > div:first-child {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.delete-contact-confirmation span {
+  color: #6f625b;
+  font-size: 0.78rem;
+}
+.confirm-delete-action {
+  border-color: #a73c25;
+  background: #a73c25;
+  color: #fff;
 }
 .selected-client-summary {
   margin-top: 0.9rem;
@@ -4249,6 +4373,25 @@ label.field {
   }
   .page-action-bar .primary-action {
     justify-content: center;
+  }
+  .agent-connection-actions {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .agent-toggle {
+    width: 100%;
+  }
+  .compact-client-header,
+  .delete-contact-confirmation,
+  .delete-contact-confirmation > div:last-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .client-record-actions,
+  .client-record-actions > button,
+  .delete-contact-confirmation button {
+    width: 100%;
   }
   .today-metrics {
     grid-template-columns: 1fr;

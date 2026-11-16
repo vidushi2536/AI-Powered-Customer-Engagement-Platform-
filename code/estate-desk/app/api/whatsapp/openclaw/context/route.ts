@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     return Response.json(
       {
         workspaceId: connection.workspace_id,
+        agentEnabled: state.agentEnabled !== false,
         contacts: (state.contacts || []).map((contact) => ({
           phone: contact.phone,
           consent: contact.consent,
