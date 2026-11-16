@@ -425,9 +425,14 @@ export async function POST(req: Request) {
     }
     await save(id, next, revision);
     if (
-      ['meeting', 'viewingStatus', 'assignLead', 'addProperties', 'upload'].includes(
-        String(body.action),
-      )
+      [
+        'addContacts',
+        'meeting',
+        'viewingStatus',
+        'assignLead',
+        'addProperties',
+        'upload',
+      ].includes(String(body.action))
     ) {
       const connection = await database()
         .prepare(
